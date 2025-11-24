@@ -8,12 +8,9 @@ use Symfony\Component\Routing\Attribute\Route;
 
 final class HealthController extends AbstractController
 {
-    #[Route('/health', name: 'app_health')]
-    public function index(): JsonResponse
+    #[Route('/api/ping', name: 'api_ping', methods:['GET'])]
+    public function ping(): JsonResponse
     {
-        return $this->json([
-            'message' => 'Welcome to your new controller!',
-            'path' => 'src/Controller/HealthController.php',
-        ]);
+        return $this->json(['status' => 'ok']);
     }
 }
