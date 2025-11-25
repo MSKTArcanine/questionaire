@@ -168,7 +168,9 @@ class Question
 
     public function removeAnswerSession(AnswerSession $answerSession): static
     {
-        if ($this->answerSessions->removeElement($answerSession) && $answerSession->getCurrentQuestion() === $this) {
+        $removed = $this->answerSessions->removeElement($answerSession);
+
+        if ($removed && $answerSession->getCurrentQuestion() === $this) {
             $answerSession->setCurrentQuestion(null);
         }
 

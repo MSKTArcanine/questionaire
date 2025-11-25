@@ -20,7 +20,7 @@ class AnswerSession
     private ?Uuid $id = null;
 
     #[ORM\Column]
-    private ?\DateTimeImmutable $createdAt = null;
+    private ?DateTimeImmutable $createdAt = null;
 
     #[ORM\ManyToOne(inversedBy: 'answerSessions')]
     #[ORM\JoinColumn(nullable: false)]
@@ -41,12 +41,12 @@ class AnswerSession
         $this->answers = new ArrayCollection();
     }
 
-    public function getCreatedAt(): ?\DateTimeImmutable
+    public function getCreatedAt(): ?DateTimeImmutable
     {
         return $this->createdAt;
     }
 
-    public function setCreatedAt(\DateTimeImmutable $createdAt): static
+    public function setCreatedAt(DateTimeImmutable $createdAt): static
     {
         $this->createdAt = $createdAt;
 
@@ -109,7 +109,10 @@ class AnswerSession
 
     public function removeAnswer(Answer $answer): static
     {
-        if ($answer->getAnswerSession() === $this && $this->answers->removeElement($answer)) {
+        if (
+            $this->answers->removeElement($answer)
+            && $answer->getAnswerSession() === $this
+        ) {
             $answer->setAnswerSession(null);
         }
 

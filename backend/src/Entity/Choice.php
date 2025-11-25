@@ -13,52 +13,50 @@ class Choice
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 255)]
-    private ?string $title = null;
-
-    #[ORM\Column(length: 255, nullable: true)]
-    private ?string $description = null;
-
     #[ORM\ManyToOne(inversedBy: 'choices')]
     private ?Question $question = null;
+
+    #[ORM\Column(length: 255)]
+    private ?string $content = null;
+
+    #[ORM\ManyToOne]
+    private ?Question $nextQuestion = null;
 
     public function getId(): ?int
     {
         return $this->id;
     }
-
-    public function getTitle(): ?string
-    {
-        return $this->title;
-    }
-
-    public function setTitle(string $title): static
-    {
-        $this->title = $title;
-
-        return $this;
-    }
-
-    public function getDescription(): ?string
-    {
-        return $this->description;
-    }
-
-    public function setDescription(?string $description): static
-    {
-        $this->description = $description;
-
-        return $this;
-    }
-
     public function getQuestion(): ?Question
     {
         return $this->question;
     }
-
     public function setQuestion(?Question $question): static
     {
         $this->question = $question;
+
+        return $this;
+    }
+
+    public function getContent(): ?string
+    {
+        return $this->content;
+    }
+
+    public function setContent(string $content): static
+    {
+        $this->content = $content;
+
+        return $this;
+    }
+
+    public function getNextQuestion(): ?Question
+    {
+        return $this->nextQuestion;
+    }
+
+    public function setNextQuestion(?Question $nextQuestion): static
+    {
+        $this->nextQuestion = $nextQuestion;
 
         return $this;
     }
