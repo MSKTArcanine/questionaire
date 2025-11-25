@@ -5,7 +5,7 @@
 questionaire.localhost {
 	encode gzip
 
-	handle_path /api/* {
+	handle /api/* {
 		reverse_proxy backend:8000
 	}
 
