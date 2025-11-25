@@ -29,23 +29,31 @@ class Question
     private Collection $choices;
 
     #[ORM\ManyToOne(inversedBy: 'questions')]
+    #[ORM\JoinColumn(nullable: false)]
     private ?Questionnaire $questionnaire = null;
+
+    /**
+     * @var Collection<int, Questionnaire>
+     */
+    #[ORM\OneToMany(targetEntity: Questionnaire::class, mappedBy: 'rootQuestion')]
+    private Collection $questionnaires;
+
+    /**
+     * @var Collection<int, AnswerSession>
+     */
+    #[ORM\OneToMany(targetEntity: AnswerSession::class, mappedBy: 'currentQuestion')]
+    private Collection $answerSessions;
 
     public function __construct()
     {
         $this->choices = new ArrayCollection();
+        $this->questionnaires = new ArrayCollection();
+        $this->answerSessions = new ArrayCollection();
     }
 
     public function getId(): ?int
     {
         return $this->id;
-    }
-
-    public function setId(string $id): static
-    {
-        $this->id = $id;
-
-        return $this;
     }
 
     public function getTitle(): ?string
@@ -92,11 +100,9 @@ class Question
 
     public function removeChoice(Choice $choice): static
     {
-        if ($this->choices->removeElement($choice)) {
+        if ($this->choices->removeElement($choice) && $choice->getQuestion() === $this) {
             // set the owning side to null (unless already changed)
-            if ($choice->getQuestion() === $this) {
-                $choice->setQuestion(null);
-            }
+            $choice->setQuestion(null);
         }
 
         return $this;
@@ -110,6 +116,61 @@ class Question
     public function setQuestionnaire(?Questionnaire $questionnaire): static
     {
         $this->questionnaire = $questionnaire;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Questionnaire>
+     */
+    public function getQuestionnaires(): Collection
+    {
+        return $this->questionnaires;
+    }
+
+    public function addQuestionnaire(Questionnaire $questionnaire): static
+    {
+        if (!$this->questionnaires->contains($questionnaire)) {
+            $this->questionnaires->add($questionnaire);
+            $questionnaire->setRootQuestion($this);
+        }
+
+        return $this;
+    }
+
+    public function removeQuestionnaire(Questionnaire $questionnaire): static
+    {
+        if ($this->questionnaires->removeElement($questionnaire) && $questionnaire->getRootQuestion() === $this) {
+            // set the owning side to null (unless already changed)
+            $questionnaire->setRootQuestion(null);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, AnswerSession>
+     */
+    public function getAnswerSessions(): Collection
+    {
+        return $this->answerSessions;
+    }
+
+    public function addAnswerSession(AnswerSession $answerSession): static
+    {
+        if (!$this->answerSessions->contains($answerSession)) {
+            $this->answerSessions->add($answerSession);
+            $answerSession->setCurrentQuestion($this);
+        }
+
+        return $this;
+    }
+
+    public function removeAnswerSession(AnswerSession $answerSession): static
+    {
+        if ($this->answerSessions->removeElement($answerSession) && $answerSession->getCurrentQuestion() === $this) {
+            $answerSession->setCurrentQuestion(null);
+        }
 
         return $this;
     }

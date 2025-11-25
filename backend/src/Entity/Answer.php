@@ -13,15 +13,24 @@ class Answer
     #[ORM\Column]
     private ?int $id = null;
 
+    #[ORM\ManyToOne(inversedBy: 'answers')]
+    private ?AnswerSession $answerSession = null;
+
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    public function setId(int $id): static
+    public function getAnswerSession(): ?AnswerSession
     {
-        $this->id = $id;
+        return $this->answerSession;
+    }
+
+    public function setAnswerSession(?AnswerSession $answerSession): static
+    {
+        $this->answerSession = $answerSession;
 
         return $this;
     }
+
 }
