@@ -28,6 +28,8 @@ services:
       NEXT_PUBLIC_API_URL: "https://questionaire.localhost/api"
     expose:
       - "3000"
+    volumes:
+    - ./backend:/app
   
   caddy:
     image: caddy:latest
