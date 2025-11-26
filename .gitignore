@@ -57,3 +57,7 @@ next-env.d.ts
 /pgdata/
 /postgres-data/
 /docker-data/
+
+#TEST
+
+/tests-api/vendor/
