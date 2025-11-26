@@ -10,7 +10,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 
-#[Route('/api/questionnaire', name: 'api_questionnaire')]
+#[Route('/api/questionnaires', name: 'api_questionnaire')]
 final class QuestionnaireController extends AbstractController
 {
     public function __construct(
