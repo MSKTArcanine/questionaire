@@ -7,7 +7,12 @@ use Symfony\Component\HttpClient\HttpClient;
 
 class QuestionnaireGETApiTest extends TestCase
 {
-    private string $baseUrl = 'https://questionaire.localhost';
+    private string $baseUrl;
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->baseUrl = $_ENV['TESTS_BASE_URL'] ?? 'https://questionaire.localhost';
+    }
 
     public function testListQuestionnaires(): void
     {
