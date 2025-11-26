@@ -1,0 +1,17 @@
+{
+	#Default
+}
+
+questionaire.localhost {
+	encode gzip
+
+	handle /api/* {
+		reverse_proxy backend:8000
+	}
+
+	handle {
+		reverse_proxy frontend:3000
+	}
+
+	tls internal
+}
