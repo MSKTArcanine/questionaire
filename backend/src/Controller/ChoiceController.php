@@ -17,6 +17,7 @@ use Symfony\Component\Routing\Attribute\Route;
 final class ChoiceController extends AbstractController
 {
     private const QUESTION_ID_PATH = '/{id}'; //Sonar.
+    private const CHOICE_NOT_FOUND = 'Choice not found';
     public function __construct(
         private readonly ChoiceRepository $choiceRepository,
         private readonly QuestionRepository $questionRepository,
@@ -54,7 +55,7 @@ final class ChoiceController extends AbstractController
 
         if (!$choice) {
             return $this->json(
-                ['error' => 'Choice not found'],
+                ['error' => self::CHOICE_NOT_FOUND],
                 404
             );
         }
@@ -120,7 +121,7 @@ final class ChoiceController extends AbstractController
 
         if (!$choice) {
             return $this->json(
-                ['error' => 'Choice not found'],
+                ['error' => self::CHOICE_NOT_FOUND],
                 404
             );
         }
@@ -173,7 +174,7 @@ final class ChoiceController extends AbstractController
 
         if (!$choice) {
             return $this->json(
-                ['error' => 'Choice not found'],
+                ['error' => self::CHOICE_NOT_FOUND],
                 404
             );
         }

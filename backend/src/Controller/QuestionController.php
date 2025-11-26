@@ -15,6 +15,7 @@ use Symfony\Component\Routing\Attribute\Route;
 final class QuestionController extends AbstractController
 {
     private const QUESTION_ID_PATH = '/{id}'; //Sonar.
+    private const QUESTION_NOT_FOUND = 'Question not found'; //Encore sonar...
 
     public function __construct(
         private readonly QuestionRepository $questionRepository,
@@ -50,7 +51,7 @@ final class QuestionController extends AbstractController
     public function question(int $id): JsonResponse{
         $question = $this->questionRepository->find($id);
         if(!$question){
-            return $this->json(['error' => 'Question not found']);
+            return $this->json(['error' => self::QUESTION_NOT_FOUND]);
         }
         $data = $this->questionToData($question);
         return $this->json(data: ['data' => $data]);
@@ -89,7 +90,7 @@ final class QuestionController extends AbstractController
     public function putQuestion(int $id, Request $request): JsonResponse{
         $question = $this->questionRepository->find($id);
         if(!$question){
-            return $this->json(['error' => 'Question not found'], 404);
+            return $this->json(['error' => self::QUESTION_NOT_FOUND], 404);
         }
         $body = json_decode($request->getContent(), true) ?? [];
         if(array_key_exists('title', $body)){
@@ -117,7 +118,7 @@ final class QuestionController extends AbstractController
 
         if (!$question) {
             return $this->json(
-                ['error' => 'Question not found'],404
+                ['error' => self::QUESTION_NOT_FOUND],404
             );
         }
 
