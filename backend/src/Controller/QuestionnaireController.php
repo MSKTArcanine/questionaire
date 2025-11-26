@@ -17,7 +17,7 @@ final class QuestionnaireController extends AbstractController
         private readonly QuestionnaireRepository $questionnaireRepository
     )
     {}
-    #[Route('/', name: 'list_questionnaire', methods:['GET'])]
+    #[Route('', name: 'list_questionnaire', methods:['GET'])]
     public function list(): JsonResponse
     {
         $questionnaires = $this->questionnaireRepository->findAll();
