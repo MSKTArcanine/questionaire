@@ -19,6 +19,8 @@ services:
       DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?serverVersion=16&charset=utf8"
     expose:
       - "8000"
+    volumes:
+    - ./backend:/app
 
   frontend:
     build: ./frontend
@@ -29,7 +31,7 @@ services:
     expose:
       - "3000"
     volumes:
-    - ./backend:/app
+      - ./frontend:/app
   
   caddy:
     image: caddy:latest
