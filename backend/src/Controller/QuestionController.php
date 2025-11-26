@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 
-#[Route('/api/question', name: 'api_question')]
+#[Route('/api/questions', name: 'api_questions')]
 final class QuestionController extends AbstractController
 {
     private const QUESTION_ID_PATH = '/{id}'; //Sonar.
@@ -38,7 +38,7 @@ final class QuestionController extends AbstractController
         ];
     }
 
-    #[Route('/', name: 'list_questions', methods:['GET'])]
+    #[Route('', name: 'list_questions', methods:['GET'])]
     public function list(): JsonResponse
     {
         $questions = $this->questionRepository->findAll();
@@ -50,13 +50,13 @@ final class QuestionController extends AbstractController
     public function question(int $id): JsonResponse{
         $question = $this->questionRepository->find($id);
         if(!$question){
-            return $this->json(['error' => 'invalid ID']);
+            return $this->json(['error' => 'Question not found']);
         }
         $data = $this->questionToData($question);
         return $this->json(data: ['data' => $data]);
     }
 
-    #[Route(path: '/', name: 'post_question', methods: ['POST'])]
+    #[Route(path: '', name: 'post_question', methods: ['POST'])]
     public function postQuestion(Request $request): JsonResponse{
         $body = json_decode($request->getContent(), true) ?? [];
         $title = $body['title'] ?? null;
