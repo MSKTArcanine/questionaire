@@ -1,1 +1,1 @@
-{"version":2,"defects":[],"times":{"Tests\\QuestionnaireApiTest::testListQuestionnaires":0.329,"Tests\\QuestionnaireApiTest::testQuestionnaireNotFound":0.025}}
+{"version":2,"defects":[],"times":{"Tests\\QuestionnaireApiTest::testListQuestionnaires":0.329,"Tests\\QuestionnaireApiTest::testQuestionnaireNotFound":0.025,"Tests\\QuestionnaireGETApiTest::testListQuestionnaires":0.068,"Tests\\QuestionnaireGETApiTest::testQuestionnaireNotFound":0.02,"Tests\\QuestionnaireGETApiTest::testQuestionnaireBase":0.031}}
