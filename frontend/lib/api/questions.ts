@@ -10,7 +10,7 @@ export async function getQuestions():Promise<Question[]>{
 export async function getQuestion(id: number):Promise<Question>{
     const res = await fetch(`/api/questions/${id}`);
     if(!res.ok){
-        throw new Error(`Erreur HTTP ${res.status} /questions`);
+        throw new Error(`Erreur HTTP ${res.status} /questions/{id}`);
     }
     const data: ApiResponseUnique<Question> = await res.json();
     return data.data;

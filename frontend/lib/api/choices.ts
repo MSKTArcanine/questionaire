@@ -10,7 +10,7 @@ export async function getChoices():Promise<Choice[]>{
 export async function getChoice(id: number):Promise<Choice>{
     const res = await fetch(`/api/choices/${id}`);
     if(!res.ok){
-        throw new Error(`Erreur HTTP ${res.status} /choices`);
+        throw new Error(`Erreur HTTP ${res.status} /choices/{id}`);
     }
     const data: ApiResponseUnique<Choice> = await res.json();
     return data.data;

@@ -10,7 +10,7 @@ export async function getQuestionnaires():Promise<Questionnaire[]>{
 export async function getQuestionnaire(id: number):Promise<Questionnaire>{
     const res = await fetch(`/api/questionnaires/${id}`);
     if(!res.ok){
-        throw new Error(`Erreur HTTP ${res.status} /questionnaires`);
+        throw new Error(`Erreur HTTP ${res.status} /questionnaires/{id}`);
     }
     const data: ApiResponseUnique<Questionnaire> = await res.json();
     return data.data;

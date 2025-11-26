@@ -1,4 +1,4 @@
-import { getChoices } from "../api/choices";
+import { getChoice, getChoices } from "../api/choices";
 type FetchMock = jest.MockedFunction<typeof fetch>;
 let fetchMock:FetchMock;
 
@@ -41,6 +41,51 @@ describe('getChoices', () => {
         
         await expect(getChoices()).rejects.toThrow(
             'Erreur HTTP 500 /choices',
+        );
+    });
+});
+describe('getchoice(id)', () => {
+    beforeEach(() => {
+        fetchMock = jest.fn() as FetchMock;
+        globalThis.fetch = fetchMock;
+    });
+    
+    const id = 1;
+
+    it('Return un choice par id', async() => {
+        const fakeResponse: ApiResponseUnique<Choice> = {
+            data: {"id":1,"content":"Livres !","questionId":1,"nextQuestionId":2}
+        }
+        fetchMock.mockResolvedValue({
+            ok:true,
+            status:200,
+            json: async () => fakeResponse,
+        } as Response);
+
+        const result = await getChoice(id);
+        expect(result).toEqual(fakeResponse.data);
+        expect(fetchMock).toHaveBeenCalledWith(`/api/choices/${id}`);
+    })
+    it('throw 500 si Internal', async () => {
+        fetchMock.mockResolvedValue({
+            ok: false,
+            status: 500,
+            json: async () => ({ error: 'Internal error' }),
+        } as Response);
+        
+        await expect(getChoice(id)).rejects.toThrow(
+            'Erreur HTTP 500 /choices/{id}',
+        );
+    });
+        it('throw 404 si invalid id', async () => {
+        fetchMock.mockResolvedValue({
+            ok: false,
+            status: 404,
+            json: async () => ({ error: 'Invalid id' }),
+        } as Response);
+        
+        await expect(getChoice(id)).rejects.toThrow(
+            'Erreur HTTP 404 /choices/{id}',
         );
     });
 });

@@ -55,6 +55,7 @@ final class QuestionnaireController extends AbstractController
                     'id' => $choice->getId(),
                     'content' => $choice->getContent(),
                     'nextQuestionId' => $choice->getNextQuestion()?->getId(),
+                    'questionId' => $choice->getQuestion()->getId(),
                 ];
             }
 
@@ -62,6 +63,7 @@ final class QuestionnaireController extends AbstractController
                 'id' => $question->getId(),
                 'title' => $question->getTitle(),
                 'description' => $question->getDescription(),
+                'questionnaireId' => $question->getQuestionnaire()->getId(),
                 'choices' => $choices,
             ];
         }
