@@ -139,8 +139,8 @@ export default function AdminQuestionDetailPage() {
       <QuestionEditor key={activeQuestion.id} question={activeQuestion} onSave={handleSaveQuestion} onCancel={() => {setActiveQuestion(null); setParentChoiceIdForNewQuestion(null)}}/>
     )}
     
-    <section className="flex-1 overflow-y-auto no-scrollbar px-8 pt-2 pb-8">
-    <div className="max-w-3xl mx-auto space-y-4">
+    <section className="flex-1 overflow-y-auto no-scrollbar px-4 sm:px-8 pt-2 pb-8">
+    <div className="max-w-5xl mx-auto space-y-4">
     <h3 className="text-lg font-semibold">
     Structure du questionnaire
     </h3>
