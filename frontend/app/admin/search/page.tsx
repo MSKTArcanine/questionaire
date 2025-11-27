@@ -1,21 +1,14 @@
 'use client';
 
 import ListItemForm from "@/component/admin/ListItemForm";
+import { useQuestionnaires } from "@/lib/hooks/useQuestionnaires";
 import { useState } from "react";
-
-const mockForms = [
-    { id: 1, title: "Kestuveu ?", description: "On fait genre on met un description" },
-    { id: 2, title: "Satisfaction atelier BD", description: "On fait genre on met un description" },
-    { id: 3, title: "Parcours jeunes lecteurs", description: "On fait genre on met un description" },
-    { id: 4, title: "Parcours jeunes lecteurs", description: "On fait genre on met un description" },
-    { id: 5, title: "Parcours jeunes lecteurs", description: "On fait genre on met un description" },
-    { id: 6, title: "Parcours jeunes lecteurs", description: "On fait genre on met un description" },
-];
 
 export default function AdminSearchFormPage() {
   const [query, setQuery] = useState("");
+  const { questionnaires, isLoading, error } = useQuestionnaires();
 
-  const filtered = mockForms.filter((f) =>
+  const filtered = questionnaires.filter((f) =>
     f.title.toLowerCase().includes(query.toLowerCase().trim()),
   );
 
@@ -46,11 +39,13 @@ export default function AdminSearchFormPage() {
             </div>
 
             <div className="space-y-3">
-              {filtered.map((form) => (
+              {!isLoading
+              && !error
+              && filtered.map((form) => (
                 <ListItemForm key={form.id} {...form}/>
               ))}
 
-              {filtered.length === 0 && (
+              {!isLoading && !error && filtered.length === 0 && (
                 <p className="text-sm text-base-content/60">
                   Aucun formulaire ne correspond à votre recherche.
                 </p>

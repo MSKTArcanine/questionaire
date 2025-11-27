@@ -47,5 +47,5 @@ type ApiDelete = { message : string }
 interface PropListSearch {
     id: number;
     title: string;
-    description: string;
+    description: string | null;
 }
