@@ -58,6 +58,8 @@ class QuestionnaireGETApiTest extends TestCase
         $this->assertSame(200, $response->getStatusCode());
 
         $data = $response->toArray();
+        $this->assertArrayHasKey('data', $data);
+        $data = $data['data'];
         
         $this->assertSame(1, $data['id']);
         $this->assertArrayHasKey('title', $data);

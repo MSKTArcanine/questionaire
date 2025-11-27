@@ -78,7 +78,7 @@ final class QuestionnaireController extends AbstractController
             'questions' => $questions,
         ];
 
-        return $this->json($data);
+        return $this->json(['data' => $data], 200);
     }
 
     #[Route('', name: 'post_questionnaire', methods:['POST'])]
@@ -109,5 +109,21 @@ final class QuestionnaireController extends AbstractController
             'rootQuestionId' => null,
         ];
         return $this->json(['data' => $data], 201);
+    }
+
+    #[Route(path: '/{id}', name: 'deleteQuestionnaire', methods: ['DELETE'])]
+    public function delete(int $id, EntityManagerInterface $em): JsonResponse{
+        /**
+         * @var Questionnaire|null $questionnaire
+         */
+        $questionnaire = $this->questionnaireRepository->find($id);
+        if(!$questionnaire){
+            return $this->json(['error' => 'Questionnaire not found'], 404);
+        }
+
+        $em->remove($questionnaire);
+        $em->flush();
+
+        return $this->json([], 204);
     }
 }

@@ -3,36 +3,47 @@
 import QuestionEditor from "@/component/admin/QuestionEditor";
 import { QuestionTree } from "@/component/admin/QuestionTree";
 import { createChoice, deleteChoice, updateChoice } from "@/lib/api/choices";
-import { createQuestion, getQuestion, getQuestionTree, updateQuestion } from "@/lib/api/questions";
+import { getQuestionnaire } from "@/lib/api/questionnaires";
+import { createQuestion, getQuestionTree, updateQuestion } from "@/lib/api/questions";
 import { QuestionNode } from "@/lib/types";
 import updateQuestionInTree from "@/lib/utils/updateQuestionInTree";
+import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function AdminQuestionDetailPage() {
+
+  const params = useParams<{ questionnaireId: string}>();
+  const questionnaireIdParam = Number(params.questionnaireId);
+
   const [activeQuestion, setActiveQuestion] = useState<QuestionNode | null>(
     null,
   );
   const [questionnaireId, setQuestionnaireId] = useState<number | null>(null);
   const [parentChoiceIdForNewQuestion, setParentChoiceIdForNewQuestion] = useState<number | null>(null);
   const [questionTree, setQuestionTree] = useState<QuestionNode | null>(null);
+  const [rootQuestionId, setRootQuestionId] = useState<number | null>(null);
+  const [questionnaireTitle, setQuestionnaireTitle] = useState<string>("");
   
-  const rootQuestionId = 1; // provisoire, plus tard => param de l’URL
-  
+  async function reloadTree(currentRootId?: number | null) {
+    const id = currentRootId ?? rootQuestionId;
+    if (!id) return;
+    const root = await getQuestionTree(id);
+    setQuestionTree(root);
+  }
+
   useEffect(() => {
     (async () => {
-      try {
-        const [rootTree, rootData] = await Promise.all([
-          getQuestionTree(rootQuestionId),
-          getQuestion(rootQuestionId),
-        ]);
-
-        setQuestionTree(rootTree);
-        setQuestionnaireId(rootData.questionnaireId);
-      } catch (err) {
-        console.error("Erreur lors du chargement du questionnaire :", err);
+      try{
+      const questionnaire = await getQuestionnaire(questionnaireIdParam);
+      setQuestionnaireTitle(questionnaire.title);
+      setQuestionnaireId(questionnaire.id);
+      setRootQuestionId(questionnaire.rootQuestionId);
+      await reloadTree(questionnaire.rootQuestionId);
+      } catch (error) {
+        console.error("Erreur chargement questionnaire : ", error);
       }
     })();
-  }, [rootQuestionId]);
+  }, [questionnaireIdParam]);
   
   async function handleCreateChoice(questionId: number, content: string) {
     try {
@@ -42,8 +53,7 @@ export default function AdminQuestionDetailPage() {
         nextQuestionId: null,
       });
       
-      const root = await getQuestionTree(rootQuestionId);
-      setQuestionTree(root);
+      await reloadTree();
     } catch (error) {
       console.error("Erreur création du choix :", error);
     }
@@ -61,15 +71,22 @@ export default function AdminQuestionDetailPage() {
         return;
       }
 
-      if(parentChoiceIdForNewQuestion == null){
-        console.error("Pas de parent");
+      if(questionnaireId == null){
+        console.error("Pas de questionnaire");
         setActiveQuestion(null);
         return;
       }
 
-      if(questionnaireId == null){
-        console.error("Pas de questionnaire");
+      if(parentChoiceIdForNewQuestion == null){ //Pas de parent = root.
+        const createdQuestion = await createQuestion({
+          title: updatedQuestion.title,
+          description: updatedQuestion.description,
+          questionnaireId: questionnaireId,
+        });
+        const root = await getQuestionTree(createdQuestion.id);
+        setQuestionTree(root);
         setActiveQuestion(null);
+        setParentChoiceIdForNewQuestion(null);
         return;
       }
 
@@ -83,10 +100,12 @@ export default function AdminQuestionDetailPage() {
         nextQuestionId: createdQuestion.id,
       });
 
-      const root = await getQuestionTree(rootQuestionId);
+      const root = await getQuestionTree(rootQuestionId ?? createdQuestion.id);
       setQuestionTree(root);
       setActiveQuestion(null);
       setParentChoiceIdForNewQuestion(null);
+
+      await reloadTree();
 
     } catch (error) {
       console.error("Erreur sauvegarde question :", error);
@@ -99,9 +118,7 @@ export default function AdminQuestionDetailPage() {
     
     try {
       await updateChoice(choiceId, { content: trimmed });
-      
-      const root = await getQuestionTree(rootQuestionId);
-      setQuestionTree(root);
+      await reloadTree();
     } catch (error) {
       console.error("Erreur lors de la mise à jour du choix :", error);
     }
@@ -120,8 +137,7 @@ export default function AdminQuestionDetailPage() {
     try {
       await deleteChoice(choiceId);
       
-      const root = await getQuestionTree(rootQuestionId);
-      setQuestionTree(root);
+      await reloadTree();
     } catch (error) {
       console.error("Erreur lors de la suppression du choix :", error);
     }
@@ -131,7 +147,7 @@ export default function AdminQuestionDetailPage() {
     <>
     <div className="border-b border-base-300 bg-base-100 px-8 py-4 shrink-0">
     <h2 className="text-2xl font-bold text-center">
-    Édition du questionnaire
+    Édition du questionnaire : {questionnaireTitle}
     </h2>
     </div>
     
@@ -151,7 +167,7 @@ export default function AdminQuestionDetailPage() {
     les libellés de réponses.
     </p>
     
-    <div className="mt-3">{questionTree && (
+    <div className="mt-3">{questionTree ? (
       <QuestionTree
       root={questionTree}
       onEditQuestion={setActiveQuestion}
@@ -160,6 +176,26 @@ export default function AdminQuestionDetailPage() {
       onUpdateChoice={handleUpdateChoice}
       onDeleteChoice={handleDeleteChoice}
       />
+    ) : (
+      <div className="border border-dashed border-base-300 rounded-xl p-6 text-center text-sm text-base-content/70">
+      Ce questionnaire n’a pas encore de question principale.
+      <br />
+      <button
+        type="button"
+        className="btn btn-sm btn-primary mt-3"
+        onClick={() => {
+          setParentChoiceIdForNewQuestion(null);
+          setActiveQuestion({
+            id: -1,
+            title: "",
+            description: "",
+            choices: [],
+          });
+        }}
+      >
+        Créer la première question
+      </button>
+    </div>
     )}</div>
     </div>
     </section>

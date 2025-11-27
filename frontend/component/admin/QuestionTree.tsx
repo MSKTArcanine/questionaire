@@ -58,168 +58,278 @@ export function QuestionTree(prop : Readonly<QuestionTreeProps>): JSX.Element {
         }
     }
     
-    function renderQuestion(node : QuestionNode, level = 0) : JSX.Element {
-        const allChoices: ChoiceNode[] = node.choices ?? [];
-        
-        return (
-            <div
-            key={node.id}
-            className={`bg-base-100 border border-base-300 rounded-xl shadow-sm p-4 mt-3 ${level > 0 ? "ml-4 border-l-2 border-base-300" : ""}`}
-            style={{ marginLeft: level * 16 }}
-            >
-            {/* Edition titre */}
-            <div className="flex items-start justify-between gap-3 mb-3">
-            <div>
-            <p className="font-semibold text-base">{node.title}</p>
-            {node.description && (
-                <p className="text-xs text-base-content/60">{node.description}</p>
-            )}
-            <p className="text-xs text-base-content/60 mt-1">
+    function renderQuestion(node: QuestionNode, level = 0): JSX.Element {
+  const allChoices: ChoiceNode[] = node.choices ?? [];
+
+  return (
+    <div
+      key={node.id}
+      className={`bg-base-100 border border-base-300 rounded-xl shadow-sm p-4 mt-3 ${
+        level > 0 ? "ml-4 border-l-2 border-base-300" : ""
+      }`}
+      style={{ marginLeft: level * 16 }}
+    >
+      {/* Titre de question */}
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <div>
+          <p className="font-semibold text-base">{node.title}</p>
+          {node.description && (
+            <p className="text-xs text-base-content/60">{node.description}</p>
+          )}
+          <p className="text-xs text-base-content/60 mt-1">
             {allChoices.length} choix
-            </p>
-            </div>
-            <button
-            type="button"
-            className="btn btn-xs btn-outline btn-primary"
-            onClick={() => prop.onEditQuestion(node)}
-            >
-            Éditer cette question
-            </button>
-            </div>
-            {/* Liste des quesitons */}
-            <div className="space-y-3">
-            {allChoices.map((choice) => {
-                const isEditing = editingChoiceId === choice.id;
-                const content = isEditing ? editingChoiceContent : choice.content;
-                
-                return (
-                    <div
-                    key={choice.id}
-                    className="collapse collapse-arrow bg-base-100 border border-base-300"
-                    >
-                    <input type="checkbox" />
-                    
-                    <div className="collapse-title text-sm">
-                    {isEditing ? (
-                        <div className="flex items-center justify-between gap-2">
-                        <input
+          </p>
+        </div>
+        <button
+          type="button"
+          className="btn btn-xs btn-outline btn-primary"
+          onClick={() => prop.onEditQuestion(node)}
+        >
+          Éditer cette question
+        </button>
+      </div>
+
+      {/* Choix */}
+      <div className="space-y-3">
+        {allChoices.map((choice) => {
+          const isEditing = editingChoiceId === choice.id;
+          const content = isEditing ? editingChoiceContent : choice.content;
+
+          // --- CAS AVEC SOUS-QUESTION => collapse ---
+          if (choice.next) {
+            return (
+              <div
+                key={choice.id}
+                className="collapse collapse-arrow bg-base-100 border border-base-300"
+              >
+                <input type="checkbox" />
+
+                {/* Le titre ne contient QUE le texte cliquable */}
+                <div className="collapse-title text-sm">
+                  <span>• {choice.content}</span>
+                </div>
+
+                {/* Les boutons sont en dehors du titre */}
+                <div className="px-4 pb-2 flex justify-end gap-2">
+                  {isEditing ? (
+                    <>
+                      <input
                         type="text"
                         className="input input-bordered input-xs flex-1"
                         value={editingChoiceContent}
-                        onChange={(e) => setEditingChoiceContent(e.target.value)}
-                        />
-                        <div className="flex gap-2">
-                        <button
+                        onChange={(e) =>
+                          setEditingChoiceContent(e.target.value)
+                        }
+                      />
+                      <button
                         type="button"
                         className="btn btn-xs btn-primary"
-                        onClick={() => handleConfirmEditChoice(choice.id)}
-                        >
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleConfirmEditChoice(choice.id);
+                        }}
+                      >
                         Valider
-                        </button>
-                        <button
+                      </button>
+                      <button
                         type="button"
                         className="btn btn-xs btn-ghost"
-                        onClick={handleCancelEditChoice}
-                        >
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleCancelEditChoice();
+                        }}
+                      >
                         Annuler
-                        </button>
-                        </div>
-                        </div>
-                    ) : (
-                        <div className="flex items-center justify-between gap-2">
-                        <span>• {content}</span>
-                        <div className="flex gap-2">
-                        <button
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
                         type="button"
                         className="btn btn-xs btn-outline"
-                        onClick={(event) => {
-                            event.preventDefault();
-                            event.stopPropagation();
-                            handleStartEditChoice(choice.id, content);
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleStartEditChoice(choice.id, content);
                         }}
-                        >
+                      >
                         Éditer la réponse
-                        </button>
-                        
-                        <button
+                      </button>
+                      <button
                         type="button"
                         className="btn btn-xs btn-outline btn-primary"
-                        onClick={(event) => {
-                            event.preventDefault();
-                            event.stopPropagation();
-                            prop.onAddQuestionToChoice(choice.id);
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          prop.onAddQuestionToChoice(choice.id);
                         }}
-                        >
+                      >
                         + Ajouter une question
-                        </button>
-                        
-                        <button
+                      </button>
+                      <button
                         type="button"
                         className="btn btn-xs btn-outline btn-error"
-                        onClick={(event) => {
-                            event.preventDefault();
-                            event.stopPropagation();
-                            handleDeleteChoice(choice.id);
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleDeleteChoice(choice.id);
                         }}
-                        >
+                      >
                         Supprimer la réponse
-                        </button>
-                        </div>
-                        </div>
-                    )}
-                    </div>
-                    
-                    <div className="collapse-content pt-2">
-                    {choice.next ? (
-                        renderQuestion(choice.next, level + 1)
-                    ) : (
-                        <p className="text-xs text-base-content/60 italic">
-                        Aucune sous-question pour l’instant.
-                        </p>
-                    )}
-                    </div>
-                    </div>
-                );
-            })}
-            </div>
-            
-            {addChoiceForQuestionId === node.id ? (
-                <div className="mt-3 flex items-center gap-2">
-                <input
-                type="text"
-                className="input input-bordered input-sm flex-1"
-                placeholder="Intitulé de la nouvelle réponse…"
-                value={newChoiceContent}
-                onChange={(e) => setNewChoiceContent(e.target.value)}
-                />
-                <button
-                type="button"
-                className="btn btn-sm btn-primary"
-                onClick={() => handleConfirmAddChoice(node.id)}
-                >
-                Ajouter
-                </button>
-                <button
-                type="button"
-                className="btn btn-sm btn-ghost"
-                onClick={handleCancelAddChoice}
-                >
-                Annuler
-                </button>
+                      </button>
+                    </>
+                  )}
                 </div>
-            ) : (
-                <button
-                type="button"
-                className="btn btn-sm btn-ghost mt-3"
-                onClick={() => {
-                    setAddChoiceForQuestionId(node.id);
-                    setNewChoiceContent("");
-                }}
-                >
-                + Ajouter un choix
-                </button>
-            )}
-            </div>
-        );}
+
+                {/* tiroir : sousquestion */}
+                <div className="collapse-content pt-2">
+                  {renderQuestion(choice.next, level + 1)}
+                </div>
+              </div>
+            );
+          }
+
+          // --- CAS SANS SOUS-QUESTION => simple ligne, comme avant ---
+          if (!choice.next) {
+  return (
+    <div
+      key={choice.id}
+      className="collapse collapse-arrow bg-base-100 border border-base-300"
+    >
+      <input type="checkbox" />
+
+      {/* Titre */}
+      <div className="collapse-title text-sm">
+        <span>• {content}</span>
+      </div>
+
+      {/* Boutons EN DEHORS du titre */}
+      <div className="px-4 pb-2 flex justify-end gap-2">
+        {isEditing ? (
+          <>
+            <input
+              type="text"
+              className="input input-bordered input-xs flex-1"
+              value={editingChoiceContent}
+              onChange={(e) => setEditingChoiceContent(e.target.value)}
+            />
+            <button
+              type="button"
+              className="btn btn-xs btn-primary"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleConfirmEditChoice(choice.id);
+              }}
+            >
+              Valider
+            </button>
+            <button
+              type="button"
+              className="btn btn-xs btn-ghost"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleCancelEditChoice();
+              }}
+            >
+              Annuler
+            </button>
+          </>
+        ) : (
+          <>
+            <button
+              type="button"
+              className="btn btn-xs btn-outline"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleStartEditChoice(choice.id, content);
+              }}
+            >
+              Éditer la réponse
+            </button>
+
+            <button
+              type="button"
+              className="btn btn-xs btn-outline btn-primary"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                prop.onAddQuestionToChoice(choice.id);
+              }}
+            >
+              + Ajouter une question
+            </button>
+
+            <button
+              type="button"
+              className="btn btn-xs btn-outline btn-error"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleDeleteChoice(choice.id);
+              }}
+            >
+              Supprimer la réponse
+            </button>
+          </>
+        )}
+      </div>
+
+      {/* Contenu du tiroir LEAF */}
+      <div className="collapse-content pt-2">
+        <p className="text-xs text-base-content/60 italic">
+          Aucune sous-question pour l’instant.
+        </p>
+      </div>
+    </div>
+  );
+}
+        })}
+      </div>
+
+      {/* + Ajouter choix */}
+      {addChoiceForQuestionId === node.id ? (
+        <div className="mt-3 flex items-center gap-2">
+          <input
+            type="text"
+            className="input input-bordered input-sm flex-1"
+            placeholder="Intitulé de la nouvelle réponse…"
+            value={newChoiceContent}
+            onChange={(e) => setNewChoiceContent(e.target.value)}
+          />
+          <button
+            type="button"
+            className="btn btn-sm btn-primary"
+            onClick={() => handleConfirmAddChoice(node.id)}
+          >
+            Ajouter
+          </button>
+          <button
+            type="button"
+            className="btn btn-sm btn-ghost"
+            onClick={handleCancelAddChoice}
+          >
+            Annuler
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          className="btn btn-sm btn-ghost mt-3"
+          onClick={() => {
+            setAddChoiceForQuestionId(node.id);
+            setNewChoiceContent("");
+          }}
+        >
+          + Ajouter un choix
+        </button>
+      )}
+    </div>
+  );
+}
         return <>{renderQuestion(prop.root)}</>;
     }
