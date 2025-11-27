@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Enum\AnswerSessionStatus;
 use App\Repository\AnswerSessionRepository;
 use DateTimeImmutable;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -35,12 +36,32 @@ class AnswerSession
     #[ORM\OneToMany(targetEntity: Answer::class, mappedBy: 'answerSession')]
     private Collection $answers;
 
+    #[ORM\Column(length: 255)]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?string $email = null;
+    
+    #[ORM\Column(type: 'string', enumType: AnswerSessionStatus::class)]
+    #[ORM\JoinColumn(nullable: false)]
+    private AnswerSessionStatus $status;
+
     public function __construct()
     {
         $this->createdAt = new DateTimeImmutable();
         $this->answers = new ArrayCollection();
+        $this->status = AnswerSessionStatus::IN_PROGRESS;
     }
 
+    public function getStatus(): AnswerSessionStatus
+    {
+        return $this->status;
+    }
+
+    public function setStatusFinished(): static
+    {
+        $this->status = AnswerSessionStatus::FINISHED;
+
+        return $this;
+    }
     public function getCreatedAt(): ?DateTimeImmutable
     {
         return $this->createdAt;
@@ -115,6 +136,18 @@ class AnswerSession
         ) {
             $answer->setAnswerSession(null);
         }
+
+        return $this;
+    }
+
+    public function getEmail(): ?string
+    {
+        return $this->email;
+    }
+
+    public function setEmail(string $email): static
+    {
+        $this->email = $email;
 
         return $this;
     }

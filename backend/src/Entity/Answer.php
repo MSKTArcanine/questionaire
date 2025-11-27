@@ -14,7 +14,16 @@ class Answer
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'answers')]
+    #[ORM\JoinColumn(nullable: false)]
     private ?AnswerSession $answerSession = null;
+
+    #[ORM\ManyToOne(inversedBy: 'answers')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Choice $choice = null;
+
+    #[ORM\ManyToOne(inversedBy: 'answers')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Question $question = null;
 
     public function getId(): ?int
     {
@@ -29,6 +38,30 @@ class Answer
     public function setAnswerSession(?AnswerSession $answerSession): static
     {
         $this->answerSession = $answerSession;
+
+        return $this;
+    }
+
+    public function getQuestion(): ?Question
+    {
+        return $this->question;
+    }
+
+    public function setQuestion(?Question $question): static
+    {
+        $this->question = $question;
+
+        return $this;
+    }
+
+    public function getChoice(): ?Choice
+    {
+        return $this->choice;
+    }
+
+    public function setChoice(?Choice $choice): static
+    {
+        $this->choice = $choice;
 
         return $this;
     }

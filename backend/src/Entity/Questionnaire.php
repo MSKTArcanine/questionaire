@@ -6,6 +6,7 @@ use App\Repository\QuestionnaireRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity(repositoryClass: QuestionnaireRepository::class)]
 class Questionnaire
@@ -36,10 +37,14 @@ class Questionnaire
     #[ORM\OneToMany(targetEntity: AnswerSession::class, mappedBy: 'questionnaire', orphanRemoval: true)]
     private Collection $answerSessions;
 
+    #[ORM\Column(type: 'uuid')]
+    private ?Uuid $publicId = null;
+
     public function __construct()
     {
         $this->questions = new ArrayCollection();
         $this->answerSessions = new ArrayCollection();
+        $this->publicId = Uuid::v4();
     }
 
     public function getId(): ?int
@@ -135,6 +140,18 @@ class Questionnaire
             // set the owning side to null (unless already changed)
             $answerSession->setQuestionnaire(null);
         }
+
+        return $this;
+    }
+
+    public function getPublicId(): ?Uuid
+    {
+        return $this->publicId;
+    }
+
+    public function setPublicId(Uuid $publicId): static
+    {
+        $this->publicId = $publicId;
 
         return $this;
     }
