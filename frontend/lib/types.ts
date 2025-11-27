@@ -65,19 +65,31 @@ export interface PropQuestionEditor {
 }
 
 export type QuestionNode = {
-  id: number;
-  title: string;
-  description?: string;
-  choices: ChoiceNode[];
+    id: number;
+    title: string;
+    description?: string;
+    choices: ChoiceNode[];
 };
 
 export type ChoiceNode = {
-  id: number;
-  content: string;
-  next?: QuestionNode;
+    id: number;
+    content: string;
+    next?: QuestionNode;
 };
 
 export type UpdateQuestionPayload = {
-  title?: string;
-  description?: string;
+    title?: string;
+    description?: string;
+};
+
+export type CreateChoicesPayload = {
+    questionId: number;
+    content: string;
+    nextQuestionId?: number | null;
+};
+
+export type UpdateChoicePayload = {
+    questionId: number;
+    content: string;
+    nextQuestionId?: number | null;
 };
