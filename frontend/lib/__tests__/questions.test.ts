@@ -1,4 +1,5 @@
 import { getQuestion, getQuestions } from "../api/questions";
+import { ApiResponseList, ApiResponseUnique, Question } from "../types";
 
 type FetchMock = jest.MockedFunction<typeof fetch>;
 let fetchMock:FetchMock;

@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\Choice;
 use App\Entity\Question;
 use App\Repository\QuestionnaireRepository;
 use App\Repository\QuestionRepository;
@@ -37,6 +38,27 @@ final class QuestionController extends AbstractController
             'description' => $question->getDescription(),
             'questionnaireId' => $question->getQuestionnaire()?->getId(),
         ];
+    }
+    private function questionToNode(Question $question): array
+    {
+    return [
+        'id' => $question->getId(),
+        'title' => $question->getTitle(),
+        'description' => $question->getDescription(),
+        'questionnaireId' => $question->getQuestionnaire()?->getId(),
+        'choices' => array_map(
+            function (Choice $choice) {
+                return [
+                    'id' => $choice->getId(),
+                    'content' => $choice->getContent(),
+                    'nextQuestion' => $choice->getNextQuestion()
+                        ? $this->questionToNode($choice->getNextQuestion())
+                        : null,
+                ];
+            },
+            $question->getChoices()->toArray()
+        ),
+    ];
     }
 
     #[Route('', name: 'list_questions', methods:['GET'])]
@@ -128,4 +150,19 @@ final class QuestionController extends AbstractController
         return $this->json(['message' => 'ok']);
     }
 
+    #[Route(path: '/{id}/tree', name: 'questionTree', methods: ['GET'])]
+    public function questionTree(int $id): JsonResponse{
+    $question = $this->questionRepository->find($id);
+
+    if (!$question) {
+        return $this->json(
+            ['error' => self::QUESTION_NOT_FOUND],
+            404
+        );
+    }
+
+    $data = $this->questionToNode($question);
+
+    return $this->json(['data' => $data]);
+}
 }

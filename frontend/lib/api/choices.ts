@@ -1,3 +1,5 @@
+import { ApiResponseList, ApiResponseUnique, Choice } from "../types";
+
 export async function getChoices():Promise<Choice[]>{
     const res = await fetch("/api/choices");
     if(!res.ok){

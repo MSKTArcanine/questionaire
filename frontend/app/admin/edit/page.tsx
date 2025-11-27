@@ -1,82 +1,69 @@
 'use client';
 
-import { JSX, useState } from "react";
-
-type QuestionNode = {
-  id: number;
-  title: string;
-  description?: string;
-  choices: ChoiceNode[];
-};
-
-type ChoiceNode = {
-  id: number;
-  label: string;
-  next?: QuestionNode;
-};
+import QuestionEditor from "@/component/admin/QuestionEditor";
+import { getQuestionTree, updateQuestion } from "@/lib/api/questions";
+import { ChoiceNode, QuestionNode } from "@/lib/types";
+import updateQuestionInTree from "@/lib/utils/updateQuestionInTree";
+import { JSX, useEffect, useState } from "react";
 
 type NewChoice = {
   id: number;
-  label: string;
+  content: string;
   questionId: number;
 };
 
-const mockQuestionTree: QuestionNode = {
-  id: 1,
-  title: "Que cherchez-vous ?",
-  description: "Question d’orientation rapide.",
-  choices: [
-    {
-      id: 1,
-      label: "Livres",
-      next: {
-        id: 2,
-        title: "Quel type de livre ?",
-        description: "Préciser le type d’ouvrage.",
-        choices: [
-          { id: 4, label: "BD" },
-          { id: 5, label: "Romans" },
-        ],
-      },
-    },
-    {
-      id: 2,
-      label: "Vinyles",
-      next: {
-        id: 3,
-        title: "Quel genre musical ?",
-        description: "Pour affiner le style musical.",
-        choices: [
-          { id: 6, label: "Rock" },
-          { id: 7, label: "Classique" },
-        ],
-      },
-    },
-  ],
-};
-
 export default function AdminQuestionDetailPage() {
-  // Panneau du haut (question en cours)
   const [activeQuestion, setActiveQuestion] = useState<QuestionNode | null>(
     null,
   );
 
-  // UI pour les choix
   const [addedChoices, setAddedChoices] = useState<NewChoice[]>([]);
-  const [choiceLabels, setChoiceLabels] = useState<Record<number, string>>({});
+  const [choiceContents, setChoiceContents] = useState<Record<number, string>>({});
 
   const [addingChoiceForQuestionId, setAddingChoiceForQuestionId] = useState<
     number | null
   >(null);
-  const [newChoiceLabel, setNewChoiceLabel] = useState("");
+  const [newChoiceContent, setNewChoiceContent] = useState("");
 
   const [editingChoiceId, setEditingChoiceId] = useState<number | null>(null);
-  const [editingChoiceLabel, setEditingChoiceLabel] = useState("");
+  const [editingChoiceContent, setEditingChoiceContent] = useState("");
   const [deletedChoiceIds, setDeletedChoiceIds] = useState<number[]>([]);
   const [parentChoiceIdForNewQuestion, setParentChoiceIdForNewQuestion] = useState<number | null>(null);
+  const [questionTree, setQuestionTree] = useState<QuestionNode | null>(null);
 
-  function getChoiceLabel(choice: ChoiceNode) {
-    return choiceLabels[choice.id] ?? choice.label;
+const rootQuestionId = 1; // provisoire, plus tard => param de l’URL
+
+useEffect(() => {
+  (async () => {
+    try {
+      const root = await getQuestionTree(rootQuestionId);
+      setQuestionTree(root);
+    } catch (err) {
+      console.error("Erreur lors du chargement du questionnaire :", err);
+    }
+  })();
+}, [rootQuestionId]);
+
+  async function handleSaveQuestion(updatedQuestion: QuestionNode) {
+  try {
+    if (updatedQuestion.id !== -1) {
+      const saved = await updateQuestion(updatedQuestion.id, {
+        title: updatedQuestion.title,
+        description: updatedQuestion.description,
+      });
+      setQuestionTree((prev) => updateQuestionInTree(prev!, saved));
+      setActiveQuestion(null);
+      return;
+    }
+
+    console.log("TODO: créer une nouvelle question");
+  } catch (error) {
+    console.error("Erreur lors de la sauvegarde de la question :", error);
+  }
+}
+
+  function getChoiceContent(choice: ChoiceNode) {
+    return choiceContents[choice.id] ?? choice.content;
   }
 
   function isChoiceDeleted(choiceId: number) {
@@ -84,39 +71,39 @@ export default function AdminQuestionDetailPage() {
   }
 
   function handleConfirmAddChoice(questionId: number) {
-    const label = newChoiceLabel.trim();
-    if (!label) return;
+    const content = newChoiceContent.trim();
+    if (!content) return;
 
     const id = Date.now(); // suffisant pour le mock
 
-    setAddedChoices((prev) => [...prev, { id, questionId, label }]);
-    setChoiceLabels((prev) => ({ ...prev, [id]: label }));
-    setNewChoiceLabel("");
+    setAddedChoices((prev) => [...prev, { id, questionId, content }]);
+    setChoiceContents((prev) => ({ ...prev, [id]: content }));
+    setNewChoiceContent("");
     setAddingChoiceForQuestionId(null);
   }
 
   function handleCancelAddChoice() {
-    setNewChoiceLabel("");
+    setNewChoiceContent("");
     setAddingChoiceForQuestionId(null);
   }
 
-  function handleStartEditChoice(choiceId: number, currentLabel: string) {
+  function handleStartEditChoice(choiceId: number, currentContent: string) {
     setEditingChoiceId(choiceId);
-    setEditingChoiceLabel(currentLabel);
+    setEditingChoiceContent(currentContent);
   }
 
   function handleConfirmEditChoice(choiceId: number) {
-    const label = editingChoiceLabel.trim();
-    if (!label) return;
+    const content = editingChoiceContent.trim();
+    if (!content) return;
 
-    setChoiceLabels((prev) => ({ ...prev, [choiceId]: label }));
+    setChoiceContents((prev) => ({ ...prev, [choiceId]: content }));
     setEditingChoiceId(null);
-    setEditingChoiceLabel("");
+    setEditingChoiceContent("");
   }
 
   function handleCancelEditChoice() {
     setEditingChoiceId(null);
-    setEditingChoiceLabel("");
+    setEditingChoiceContent("");
   }
 function handleAddQuestionForChoice(choiceId: number) {
   setParentChoiceIdForNewQuestion(choiceId);
@@ -139,7 +126,7 @@ function handleAddQuestionForChoice(choiceId: number) {
   .filter((c) => c.questionId === node.id)
   .map((c) => ({
     id: c.id,
-    label: c.label,
+    content: c.content,
   }));
 
     const allChoices: ChoiceNode[] = [...node.choices, ...extraChoicesForThisQuestion];
@@ -175,7 +162,7 @@ function handleAddQuestionForChoice(choiceId: number) {
           {allChoices
           .filter((choice) => !isChoiceDeleted(choice.id))
           .map((choice) => {
-            const label = getChoiceLabel(choice);
+            const content = getChoiceContent(choice);
             const isEditing = editingChoiceId === choice.id;
 
             if (choice.next) {
@@ -187,7 +174,7 @@ function handleAddQuestionForChoice(choiceId: number) {
       <input type="checkbox" />
 
       <div className="collapse-title text-sm">
-        <span>• {label}</span>
+        <span>• {content}</span>
       </div>
 
       <div className="px-4 pb-2 flex justify-end gap-2">
@@ -196,8 +183,8 @@ function handleAddQuestionForChoice(choiceId: number) {
             <input
               type="text"
               className="input input-bordered input-xs flex-1"
-              value={editingChoiceLabel}
-              onChange={(e) => setEditingChoiceLabel(e.target.value)}
+              value={editingChoiceContent}
+              onChange={(e) => setEditingChoiceContent(e.target.value)}
             />
             <button
               type="button"
@@ -222,7 +209,7 @@ function handleAddQuestionForChoice(choiceId: number) {
               onClick={(event) => {
                 event.preventDefault();
                 event.stopPropagation();
-                handleStartEditChoice(choice.id, label);
+                handleStartEditChoice(choice.id, content);
               }}
             >
               Éditer la réponse
@@ -256,9 +243,9 @@ function handleAddQuestionForChoice(choiceId: number) {
                     <input
                       type="text"
                       className="input input-bordered input-xs flex-1"
-                      value={editingChoiceLabel}
+                      value={editingChoiceContent}
                       onChange={(e) =>
-                        setEditingChoiceLabel(e.target.value)
+                        setEditingChoiceContent(e.target.value)
                       }
                     />
                     <div className="flex gap-2">
@@ -280,12 +267,12 @@ function handleAddQuestionForChoice(choiceId: number) {
                   </div>
                 ) : (
                   <div className="flex items-center justify-between gap-2">
-  <span>• {label}</span>
+  <span>• {content}</span>
   <div className="flex gap-2">
     <button
       type="button"
       className="btn btn-xs btn-outline"
-      onClick={(event) => {handleStartEditChoice(choice.id, label); event.stopPropagation();}}
+      onClick={(event) => {handleStartEditChoice(choice.id, content); event.stopPropagation();}}
     >
       Éditer la réponse
     </button>
@@ -319,8 +306,8 @@ function handleAddQuestionForChoice(choiceId: number) {
               type="text"
               className="input input-bordered input-sm flex-1"
               placeholder="Intitulé de la nouvelle réponse…"
-              value={newChoiceLabel}
-              onChange={(e) => setNewChoiceLabel(e.target.value)}
+              value={newChoiceContent}
+              onChange={(e) => setNewChoiceContent(e.target.value)}
             />
             <button
               type="button"
@@ -343,7 +330,7 @@ function handleAddQuestionForChoice(choiceId: number) {
             className="btn btn-sm btn-ghost mt-3"
             onClick={() => {
               setAddingChoiceForQuestionId(node.id);
-              setNewChoiceLabel("");
+              setNewChoiceContent("");
             }}
           >
             + Ajouter un choix
@@ -362,82 +349,7 @@ function handleAddQuestionForChoice(choiceId: number) {
       </div>
 
       {activeQuestion && (
-        <section className="px-8 pt-6 pb-4">
-          <div className="max-w-3xl mx-auto bg-base-100 border border-base-300 rounded-xl shadow-md p-6 space-y-5">
-            <header className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">
-                {activeQuestion.id === -1
-                  ? "Nouvelle question"
-                  : "Question en cours"}
-              </h3>
-              {activeQuestion.id !== -1 && (
-                <span className="badge badge-outline">
-                  ID {activeQuestion.id}
-                </span>
-              )}
-            </header>
-
-            <div className="space-y-4">
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text font-semibold">
-                    Intitulé de la question
-                  </span>
-                </label>
-                <input
-                  type="text"
-                  className="input input-bordered"
-                  defaultValue={activeQuestion.title}
-                  // TODO: onChange + sauvegarde API
-                />
-              </div>
-
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text font-semibold">
-                    Description (facultatif)
-                  </span>
-                </label>
-                <input
-                  type="text"
-                  className="input input-bordered"
-                  defaultValue={activeQuestion.description ?? ""}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <p className="text-sm font-semibold">
-                  Choix de cette question
-                </p>
-                <p className="text-xs text-base-content/60">
-                  (Pour l’instant, la gestion détaillée des choix se fait dans
-                  la partie “Structure du questionnaire” ci-dessous.)
-                </p>
-              </div>
-
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  className="btn btn-ghost btn-sm"
-                  onClick={() => setActiveQuestion(null)}
-                >
-                  Annuler les modifications
-                </button>
-                <button
-                    type="button"
-                    className="btn btn-primary btn-sm"
-                    onClick={() => {
-                        // TODO: ici plus tard → appel API + mise à jour de l’arbre
-                        setActiveQuestion(null);
-                        setParentChoiceIdForNewQuestion(null);
-                    }}
-                    >
-                    Enregistrer la question
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
+        <QuestionEditor key={activeQuestion.id} question={activeQuestion} onSave={handleSaveQuestion} onCancel={() => {setActiveQuestion(null); setParentChoiceIdForNewQuestion(null)}}/>
       )}
 
       <section className="flex-1 overflow-y-auto no-scrollbar px-8 pt-2 pb-8">
@@ -452,7 +364,7 @@ function handleAddQuestionForChoice(choiceId: number) {
             les libellés de réponses.
           </p>
 
-          <div className="mt-3">{renderQuestion(mockQuestionTree)}</div>
+          <div className="mt-3">{questionTree && renderQuestion(questionTree)}</div>
         </div>
       </section>
     </>

@@ -53,5 +53,31 @@ export interface PropListSearch {
 export interface CreateQuestionnairePayload {
     title: string;
     description?: string | null;
+    parentChoiceId?: number | null;
+    questionnaireId?: number;
     //TODO: ZOD surement après en (type) ...
 }
+
+export interface PropQuestionEditor {
+    question:QuestionNode;
+    onSave:CallableFunction;
+    onCancel:CallableFunction;
+}
+
+export type QuestionNode = {
+  id: number;
+  title: string;
+  description?: string;
+  choices: ChoiceNode[];
+};
+
+export type ChoiceNode = {
+  id: number;
+  content: string;
+  next?: QuestionNode;
+};
+
+export type UpdateQuestionPayload = {
+  title?: string;
+  description?: string;
+};

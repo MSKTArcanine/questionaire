@@ -1,3 +1,5 @@
+import { PropListSearch } from "@/lib/types";
+
 export default function ListItemForm(prop: Readonly<PropListSearch>){
     return (
         <div
