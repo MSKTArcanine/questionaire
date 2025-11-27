@@ -84,7 +84,7 @@ final class QuestionController extends AbstractController
         $body = json_decode($request->getContent(), true) ?? [];
         $title = $body['title'] ?? null;
         $description = $body['description'] ?? null;
-        $questionnaireId = $body['questionnaire'] ?? null;
+        $questionnaireId = $body['questionnaireId'] ?? null;
 
         if(!$title || !$questionnaireId){
             return $this->json(['error' => 'Invalid form'], 405);

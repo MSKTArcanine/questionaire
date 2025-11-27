@@ -93,3 +93,13 @@ export type UpdateChoicePayload = {
     content: string;
     nextQuestionId?: number | null;
 };
+
+export interface QuestionTreeProps {
+    root: QuestionNode;
+    onEditQuestion: (question: QuestionNode) => void;
+    onAddQuestionToChoice: (choiceId: number) => void;
+
+    onCreateChoice: (questionId: number, content: string) => void | Promise<void>;
+    onUpdateChoice: (choiceId: number, content: string) => void | Promise<void>;
+    onDeleteChoice: (choiceId: number) => void | Promise<void>;
+}

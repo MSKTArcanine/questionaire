@@ -36,3 +36,9 @@ fixtures:
 # Test front :
 test-front:
 	docker compose exec frontend pnpm test
+# Bye la DB :
+reset-db:
+	docker compose exec backend php bin/console doctrine:database:drop --force --if-exists
+	docker compose exec backend php bin/console doctrine:database:create --if-not-exists
+	docker compose exec backend php bin/console doctrine:migrations:migrate --no-interaction
+	docker compose exec backend php bin/console doctrine:fixtures:load --no-interaction --purge-with-truncate
