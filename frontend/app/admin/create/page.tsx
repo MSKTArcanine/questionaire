@@ -51,7 +51,7 @@ export default function AdminCreateFormPage() {
                     />
                   </div>
                   <p className="label pl-4">
-                    <span className="label-text-alt text-base-content/60">
+                    <span className="label-text-alt text-base-content/60">{/* WCAG */}
                       Optionnel, mais recommandé pour les usagers.
                     </span>
                   </p>

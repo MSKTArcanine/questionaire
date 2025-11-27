@@ -1,6 +1,6 @@
-// app/admin/search/page.tsx
 'use client';
 
+import ListItemForm from "@/component/admin/ListItemForm";
 import { useState } from "react";
 
 const mockForms = [
@@ -47,30 +47,7 @@ export default function AdminSearchFormPage() {
 
             <div className="space-y-3">
               {filtered.map((form) => (
-                <div
-                  key={form.id}
-                  className="card bg-base-100 border border-base-300 shadow-sm"
-                >
-                  <div className="card-body flex-row items-center justify-between gap-4">
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-base">
-                        {form.title}
-                      </h3>
-                      <p className="text-sm text-base-content/60">
-                        {form.description}
-                      </p>
-                    </div>
-
-                    <div className="flex gap-2 shrink-0">
-                      <button className="btn btn-sm btn-primary">
-                        Ouvrir
-                      </button>
-                      <button className="btn btn-sm btn-error">
-                        Supprimer
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                <ListItemForm key={form.id} {...form}/>
               ))}
 
               {filtered.length === 0 && (

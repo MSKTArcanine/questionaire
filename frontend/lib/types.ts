@@ -43,3 +43,9 @@ interface ApiResponseUnique<T>{
 
 type ApiError = { error : string }
 type ApiDelete = { message : string }
+
+interface PropListSearch {
+    id: number;
+    title: string;
+    description: string;
+}
