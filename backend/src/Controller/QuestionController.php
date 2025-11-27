@@ -73,7 +73,7 @@ final class QuestionController extends AbstractController
     public function question(int $id): JsonResponse{
         $question = $this->questionRepository->find($id);
         if(!$question){
-            return $this->json(['error' => self::QUESTION_NOT_FOUND]);
+            return $this->json(['error' => self::QUESTION_NOT_FOUND], 404);
         }
         $data = $this->questionToData($question);
         return $this->json(data: ['data' => $data]);

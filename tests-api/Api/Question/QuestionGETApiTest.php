@@ -42,7 +42,7 @@ class QuestionGETApiTest extends TestCase
 
         $response = $client->request('GET', $this->baseUrl . '/api/questions/999999');
 
-        $this->assertSame(200, $response->getStatusCode());
+        $this->assertSame(404, $response->getStatusCode());
 
         $data = $response->toArray(false);
 
