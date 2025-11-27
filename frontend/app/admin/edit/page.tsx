@@ -1,6 +1,7 @@
 'use client';
 
 import QuestionEditor from "@/component/admin/QuestionEditor";
+import { deleteChoice, updateChoice } from "@/lib/api/choices";
 import { getQuestionTree, updateQuestion } from "@/lib/api/questions";
 import { ChoiceNode, QuestionNode } from "@/lib/types";
 import updateQuestionInTree from "@/lib/utils/updateQuestionInTree";
@@ -92,13 +93,20 @@ useEffect(() => {
     setEditingChoiceContent(currentContent);
   }
 
-  function handleConfirmEditChoice(choiceId: number) {
+  async function handleConfirmEditChoice(choiceId: number) { //FAIT.
     const content = editingChoiceContent.trim();
     if (!content) return;
-
-    setChoiceContents((prev) => ({ ...prev, [choiceId]: content }));
-    setEditingChoiceId(null);
-    setEditingChoiceContent("");
+    try {
+      const isNewChoice = addedChoices.some((c) => c.id === choiceId);
+      if(!isNewChoice){
+        await updateChoice(choiceId, {content});
+      }
+      setChoiceContents((prev) => ({ ...prev, [choiceId]: content }));
+    } catch (error) { console.error("Erreur edit : ", error);}
+    finally {
+      setEditingChoiceId(null);
+      setEditingChoiceContent("");
+    }
   }
 
   function handleCancelEditChoice() {
@@ -114,10 +122,21 @@ function handleAddQuestionForChoice(choiceId: number) {
     choices: [],
   });
 }
-  function handleDeleteChoice(choiceId: number) {
-    setDeletedChoiceIds((prev) => [...prev, choiceId]);
-    if(editingChoiceId === choiceId){
-      handleCancelEditChoice();
+  async function handleDeleteChoice(choiceId: number) {
+    try {
+      const isNewChoice = addedChoices.some((c) => c.id === choiceId);
+      if (!isNewChoice) {
+        await deleteChoice(choiceId);
+      } else {
+        setAddedChoices((prev) => prev.filter((c) => c.id !== choiceId));
+      }
+      
+      setDeletedChoiceIds((prev) => [...prev, choiceId]);
+      if(editingChoiceId === choiceId){
+        handleCancelEditChoice();
+      }
+    }catch(error){
+      console.error("Erreur supp :", error);
     }
   }
 

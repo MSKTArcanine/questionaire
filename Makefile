@@ -32,7 +32,7 @@ migrate:
 
 # Recharger les fixtures + purge
 fixtures:
-	docker compose exec backend php bin/console doctrine:fixtures:load --no-interaction
+	docker compose exec backend php bin/console doctrine:fixtures:load --no-interaction --purge-with-truncate
 # Test front :
 test-front:
 	docker compose exec frontend pnpm test
