@@ -21,7 +21,7 @@ class QuestionnaireGETApiTest extends TestCase
             'verify_host' => false, //Pareil.
         ]);
 
-        $response = $client->request('GET', $this->baseUrl . '/api/questionnaire/'); //curl ...
+        $response = $client->request('GET', $this->baseUrl . '/api/questionnaires/'); //curl ...
 
         $this->assertSame(200, $response->getStatusCode()); //Api renvoi succès ?
 
@@ -39,7 +39,7 @@ class QuestionnaireGETApiTest extends TestCase
             'verify_host' => false,
         ]);
 
-        $response = $client->request('GET', $this->baseUrl . '/api/questionnaire/999999'); //Test 'débile'
+        $response = $client->request('GET', $this->baseUrl . '/api/questionnaires/999999'); //Test 'débile'
 
         $this->assertSame(404, $response->getStatusCode()); //id not found = 404
 
@@ -54,7 +54,7 @@ class QuestionnaireGETApiTest extends TestCase
             'verify_peer' => false,
             'verify_host' => false,
         ]);
-        $response = $client->request('GET', $this->baseUrl . '/api/questionnaire/1');
+        $response = $client->request('GET', $this->baseUrl . '/api/questionnaires/1');
         $this->assertSame(200, $response->getStatusCode());
 
         $data = $response->toArray();

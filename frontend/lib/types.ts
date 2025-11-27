@@ -1,51 +1,57 @@
-interface Questionnaire {
+export interface Questionnaire {
     id : number;
     title : string;
     description : string | null;
     rootQuestionId : number | null;
 }
 
-interface Question {
+export interface Question {
     id : number;
     title : string;
     description : string | null;
     questionnaireId : number;
 }
 
-interface Choice {
+export interface Choice {
     id: number;
     content : string;
     questionId : number;
     nextQuestionId : number | null;
 }
 
-interface QuestionWithChoices extends Question {
+export interface QuestionWithChoices extends Question {
     choices: Choice[]
 }
 
-interface QuestionnaireWithQuestions extends Questionnaire {
+export interface QuestionnaireWithQuestions extends Questionnaire {
     questions: Question[]
 }
 
-interface QuestionnaireTree extends Questionnaire {
+export interface QuestionnaireTree extends Questionnaire {
     questions: QuestionWithChoices[]
 }
 
-type QuestionnaireDetail = Questionnaire & { questions: QuestionWithChoices[] }
+export type QuestionnaireDetail = Questionnaire & { questions: QuestionWithChoices[] }
 
-interface ApiResponseList<T> {
+export interface ApiResponseList<T> {
     data: T[];
 }
 
-interface ApiResponseUnique<T>{
+export interface ApiResponseUnique<T>{
     data: T;
 }
 
-type ApiError = { error : string }
-type ApiDelete = { message : string }
+export type ApiError = { error : string }
+export type ApiDelete = { message : string }
 
-interface PropListSearch {
+export interface PropListSearch {
     id: number;
     title: string;
     description: string | null;
+}
+
+export interface CreateQuestionnairePayload {
+    title: string;
+    description?: string | null;
+    //TODO: ZOD surement après en (type) ...
 }

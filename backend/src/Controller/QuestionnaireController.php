@@ -6,8 +6,10 @@ use App\Entity\Choice;
 use App\Entity\Question;
 use App\Entity\Questionnaire;
 use App\Repository\QuestionnaireRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[Route('/api/questionnaires', name: 'api_questionnaire')]
@@ -77,5 +79,35 @@ final class QuestionnaireController extends AbstractController
         ];
 
         return $this->json($data);
+    }
+
+    #[Route('', name: 'post_questionnaire', methods:['POST'])]
+    public function create(Request $request, EntityManagerInterface $em): JsonResponse
+    {
+        $body = json_decode($request->getContent(), true);
+
+        if(!is_array($body)){
+            return $this->json(['error' => 'Invalid JSON'], 400);
+        }
+
+        $title = $body['title'] ?? null;
+        $description = $body['description'] ?? null;
+
+        if($title === '' || $title === null){
+            return $this->json(['error' => 'Title is required'], 400);
+        }
+
+        $questionnaire = new Questionnaire();
+        $questionnaire->setTitle($title);
+        $questionnaire->setDescription($description ?? null);
+        $em->persist($questionnaire);
+        $em->flush();
+        $data = [
+            'id' => $questionnaire->getId(),
+            'title' => $questionnaire->getTitle(),
+            'description' => $questionnaire->getDescription(),
+            'rootQuestionId' => null,
+        ];
+        return $this->json(['data' => $data], 201);
     }
 }

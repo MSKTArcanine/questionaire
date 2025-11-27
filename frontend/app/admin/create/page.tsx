@@ -1,6 +1,49 @@
 'use client';
 
+import { createQuestionnaire } from "@/lib/api/questionnaires";
+import { CreateQuestionnairePayload } from "@/lib/types";
+import { useRouter } from "next/navigation";
+import { FormEvent, useState } from "react";
+
 export default function AdminCreateFormPage() {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<boolean>(false);
+  const router = useRouter();
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setIsSubmitting(true);
+    setError(null);
+    setSuccess(false);
+
+    const formData = new FormData(event.currentTarget);
+    const rawTitle = formData.get('title');
+    const title =
+      typeof rawTitle === 'string'
+        ? rawTitle.trim()
+        : '';
+
+    const rawDescription = formData.get('description');
+    const descriptionValue =
+      typeof rawDescription === 'string'
+        ? rawDescription.trim()
+        : '';
+    //Zzz SONAR. VRAIMENT. gneugneu c'est un String | File.
+
+const description = descriptionValue === '' ? null : descriptionValue;
+    const payload:CreateQuestionnairePayload = { title, description };
+
+    try {
+      await createQuestionnaire(payload);
+      setSuccess(true);
+      router.push('/admin/search'); //TODO: Vers la page des détails.
+    }catch(err){
+      setError(err instanceof Error ? err.message : 'Erreur inconnue');
+    }finally{
+      setIsSubmitting(false);
+    }
+  }
   return (
     <div className="min-h-screen flex flex-col bg-base-200">
       <div className="flex flex-1 overflow-hidden">
@@ -15,11 +58,21 @@ export default function AdminCreateFormPage() {
             <form
               className="card w-full max-w-xl bg-base-100 shadow-lg"
               onSubmit={(e) => {
-                e.preventDefault();
+                handleSubmit(e);
               }}
             >
               <div className="card-body gap-6">
                 <div className="form-control gap-2">
+                  {error && (
+                    <div className="alert alert-error py-2 text-sm">
+                      <span>{error}</span>
+                    </div>
+                  )}
+                  {success && (
+                    <div className="alert alert-success py-2 text-sm">
+                      <span>Formulaire créé avec succès !</span>
+                    </div>
+                  )}
                   <p className="label pl-1">
                     <span className="label-text font-semibold">
                       Titre du formulaire
@@ -58,7 +111,7 @@ export default function AdminCreateFormPage() {
                 </div>
 
                 <div className="card-actions justify-center pt-2">
-                  <button type="submit" className="btn btn-primary px-6">
+                  <button type="submit" className="btn btn-primary px-6" disabled={isSubmitting}>
                     Ajouter +
                   </button>
                 </div>
