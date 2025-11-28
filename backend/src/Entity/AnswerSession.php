@@ -36,8 +36,7 @@ class AnswerSession
     #[ORM\OneToMany(targetEntity: Answer::class, mappedBy: 'answerSession', orphanRemoval: true, cascade: ['persist', 'remove'])]
     private Collection $answers;
 
-    #[ORM\Column(length: 255)]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\Column(length: 255, nullable: true)]
     private ?string $email = null;
 
     #[ORM\Column(type: 'string', enumType: AnswerSessionStatus::class)]
@@ -145,7 +144,7 @@ class AnswerSession
         return $this->email;
     }
 
-    public function setEmail(string $email): static
+    public function setEmail(?string $email): static
     {
         $this->email = $email;
 

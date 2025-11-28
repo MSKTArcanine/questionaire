@@ -28,6 +28,7 @@ final class QuestionnaireController extends AbstractController
             'title' => $q->getTitle(),
             'description' => $q->getDescription(),
             'rootQuestionId' => $q->getRootQuestion()?->getId(),
+            'slug' => (string) $q->getPublicId(),
         ], $questionnaires);
         return $this->json(['data' => $data]);
     }
@@ -75,6 +76,7 @@ final class QuestionnaireController extends AbstractController
             'title' => $questionnaire->getTitle(),
             'description' => $questionnaire->getDescription(),
             'rootQuestionId' => $questionnaire->getRootQuestion()?->getId(),
+            'slug' => (string) $questionnaire->getPublicId(),
             'questions' => $questions,
         ];
 
