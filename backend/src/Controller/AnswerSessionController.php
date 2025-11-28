@@ -103,7 +103,7 @@ final class AnswerSessionController extends AbstractController
         }
 
         if($answerSession->getStatus() === AnswerSessionStatus::FINISHED){
-            return $this->json(['error' => 'AnswerSession is already finished'], 400);
+            return $this->json(['error' => 'AnswerSession is already finished'], 409);
         }
 
         $currentQuestion = $answerSession->getCurrentQuestion();
@@ -146,6 +146,20 @@ final class AnswerSessionController extends AbstractController
 
         $this->entityManager->persist($answer);
         $this->entityManager->flush();
+
+        return $this->json(['data' => $this->formatSession($answerSession)], 200);
+    }
+
+    #[Route(path: '/{id]', name: 'getAS', methods: ['GET'])]
+    public function getAnswerSession(string $id): JsonResponse {
+        /**
+         * @var AnswerSession | null $answerSession
+         */
+        $answerSession = $this->answerSessionRepository->find($id);
+
+        if(!$answerSession){
+            return $this->json(['error' => 'AnswerSession not found'], 404);
+        }
 
         return $this->json(['data' => $this->formatSession($answerSession)], 200);
     }
