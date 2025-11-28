@@ -50,7 +50,7 @@ export async function updateChoice(id: number, payload: Partial<UpdateChoicePayl
     return data.data;
 }
 
-export async function deleteChoice(id: number): Promise<{ message: string }>{
+export async function deleteChoice(id: number): Promise<void>{
     const res = await fetch(`/api/choices/${id}`, {
         method: "DELETE",
         cache: "no-store",
@@ -58,6 +58,4 @@ export async function deleteChoice(id: number): Promise<{ message: string }>{
     if(!res.ok){
         throw new Error(`Erreur HTTP ${res.status} /choices/{id} [DELETE]`);
     }
-    const data: { message: string } = await res.json();
-    return data;
 }

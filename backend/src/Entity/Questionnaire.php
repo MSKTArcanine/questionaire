@@ -25,20 +25,21 @@ class Questionnaire
     /**
      * @var Collection<int, Question>
      */
-    #[ORM\OneToMany(targetEntity: Question::class, mappedBy: 'questionnaire')]
+    #[ORM\OneToMany(targetEntity: Question::class, mappedBy: 'questionnaire', orphanRemoval: true, cascade: ['persist', 'remove'])]
     private Collection $questions;
-
-    #[ORM\ManyToOne(inversedBy: 'questionnaires')]
-    private ?Question $rootQuestion = null;
 
     /**
      * @var Collection<int, AnswerSession>
      */
-    #[ORM\OneToMany(targetEntity: AnswerSession::class, mappedBy: 'questionnaire', orphanRemoval: true)]
+    #[ORM\OneToMany(targetEntity: AnswerSession::class, mappedBy: 'questionnaire', orphanRemoval: true, cascade: ['persist', 'remove'])]
     private Collection $answerSessions;
 
     #[ORM\Column(type: 'uuid')]
     private ?Uuid $publicId = null;
+
+    #[ORM\ManyToOne(targetEntity: Question::class)]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    private ?Question $rootQuestion = null;
 
     public function __construct()
     {
@@ -104,18 +105,6 @@ class Questionnaire
         return $this;
     }
 
-    public function getRootQuestion(): ?Question
-    {
-        return $this->rootQuestion;
-    }
-
-    public function setRootQuestion(?Question $rootQuestion): static
-    {
-        $this->rootQuestion = $rootQuestion;
-
-        return $this;
-    }
-
     /**
      * @return Collection<int, AnswerSession>
      */
@@ -155,4 +144,16 @@ class Questionnaire
 
         return $this;
     }
+
+public function getRootQuestion(): ?Question
+{
+    return $this->rootQuestion;
+}
+
+public function setRootQuestion(?Question $rootQuestion): static
+{
+    $this->rootQuestion = $rootQuestion;
+
+    return $this;
+}
 }

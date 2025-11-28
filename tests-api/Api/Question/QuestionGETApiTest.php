@@ -57,18 +57,29 @@ class QuestionGETApiTest extends TestCase
             'verify_host' => false,
         ]);
 
-        $response = $client->request('GET', $this->baseUrl . '/api/questions/1');
+        $listResponse = $client->request('GET', $this->baseUrl . '/api/questions');
+        $this->assertSame(200, $listResponse->getStatusCode());
 
+        $listData = $listResponse->toArray();
+        $this->assertArrayHasKey('data', $listData);
+        $this->assertIsArray($listData['data']);
+        $this->assertNotEmpty($listData['data']);
+
+        $firstQuestion = $listData['data'][0];
+        $this->assertArrayHasKey('id', $firstQuestion);
+        $questionId = $firstQuestion['id'];
+
+        $response = $client->request('GET', $this->baseUrl . '/api/questions/' . $questionId);
         $this->assertSame(200, $response->getStatusCode());
 
         $data = $response->toArray();
-
         $this->assertArrayHasKey('data', $data);
         $question = $data['data'];
 
-        $this->assertSame(1, $question['id']);
+        $this->assertSame($questionId, $question['id']);
         $this->assertArrayHasKey('title', $question);
         $this->assertArrayHasKey('description', $question);
         $this->assertArrayHasKey('questionnaireId', $question);
+
     }
 }

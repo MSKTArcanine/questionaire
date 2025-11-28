@@ -21,7 +21,7 @@ export default function ListItemForm(prop: Readonly<PropListSearch>){
                     >
                         Editer
                     </Link>
-                    <button className="btn btn-sm btn-error">
+                    <button className="btn btn-sm btn-error" onClick={() => prop.onDelete(prop.id)}>
                         Supprimer
                     </button>
                 </div>

@@ -27,19 +27,19 @@ class AnswerSession
     #[ORM\JoinColumn(nullable: false)]
     private ?Questionnaire $questionnaire = null;
 
-    #[ORM\ManyToOne(inversedBy: 'answerSessions')]
+    #[ORM\ManyToOne]
     private ?Question $currentQuestion = null;
 
     /**
      * @var Collection<int, Answer>
      */
-    #[ORM\OneToMany(targetEntity: Answer::class, mappedBy: 'answerSession')]
+    #[ORM\OneToMany(targetEntity: Answer::class, mappedBy: 'answerSession', orphanRemoval: true, cascade: ['persist', 'remove'])]
     private Collection $answers;
 
     #[ORM\Column(length: 255)]
     #[ORM\JoinColumn(nullable: false)]
     private ?string $email = null;
-    
+
     #[ORM\Column(type: 'string', enumType: AnswerSessionStatus::class)]
     #[ORM\JoinColumn(nullable: false)]
     private AnswerSessionStatus $status;

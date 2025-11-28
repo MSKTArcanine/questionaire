@@ -27,7 +27,7 @@ class Choice
     /**
      * @var Collection<int, Answer>
      */
-    #[ORM\OneToMany(targetEntity: Answer::class, mappedBy: 'choice', orphanRemoval: true)]
+    #[ORM\OneToMany(targetEntity: Answer::class, mappedBy: 'choice', orphanRemoval: true, cascade: ['persist', 'remove'])]
     private Collection $answers;
 
     public function __construct()

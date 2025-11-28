@@ -57,16 +57,26 @@ class ChoiceGETApiTest extends TestCase
             'verify_host' => false,
         ]);
 
-        $response = $client->request('GET', $this->baseUrl . '/api/choices/1');
+        $listResponse = $client->request('GET', $this->baseUrl . '/api/choices');
+        $this->assertSame(200, $listResponse->getStatusCode());
 
+        $listData = $listResponse->toArray();
+        $this->assertArrayHasKey('data', $listData);
+        $this->assertIsArray($listData['data']);
+        $this->assertNotEmpty($listData['data']);
+
+        $firstChoice = $listData['data'][0];
+        $this->assertArrayHasKey('id', $firstChoice);
+        $choiceId = $firstChoice['id'];
+
+        $response = $client->request('GET', $this->baseUrl . '/api/choices/' . $choiceId);
         $this->assertSame(200, $response->getStatusCode());
 
         $data = $response->toArray();
-
         $this->assertArrayHasKey('data', $data);
         $choice = $data['data'];
 
-        $this->assertSame(1, $choice['id']);
+        $this->assertSame($choiceId, $choice['id']);
         $this->assertArrayHasKey('content', $choice);
         $this->assertArrayHasKey('questionId', $choice);
         $this->assertArrayHasKey('nextQuestionId', $choice);

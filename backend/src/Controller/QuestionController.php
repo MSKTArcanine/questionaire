@@ -102,7 +102,7 @@ final class QuestionController extends AbstractController
         $question->setQuestionnaire($questionnaire);
 
         if($questionnaire->getRootQuestion() === null){ //Ajout de la question root.
-            $questionnaire->setRootQuestion($question);
+            $question->setIsRoot(true); //On met le flag
         }
 
         $this->entityManager->persist($question);

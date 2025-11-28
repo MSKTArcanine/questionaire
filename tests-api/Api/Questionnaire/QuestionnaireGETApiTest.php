@@ -54,30 +54,42 @@ class QuestionnaireGETApiTest extends TestCase
             'verify_peer' => false,
             'verify_host' => false,
         ]);
-        $response = $client->request('GET', $this->baseUrl . '/api/questionnaires/1');
+        
+        $listResponse = $client->request('GET', $this->baseUrl . '/api/questionnaires');
+        $this->assertSame(200, $listResponse->getStatusCode());
+
+        $listData = $listResponse->toArray();
+        $this->assertIsArray($listData);
+        $this->assertArrayHasKey('data', $listData);
+        $this->assertNotEmpty($listData['data']);
+
+        $firstQuestionnaire = $listData['data'][0];
+        $this->assertArrayHasKey('id', $firstQuestionnaire);
+        $id = $firstQuestionnaire['id'];
+
+        $response = $client->request('GET', $this->baseUrl . '/api/questionnaires/' . $id);
         $this->assertSame(200, $response->getStatusCode());
 
         $data = $response->toArray();
+        $this->assertIsArray($data);
         $this->assertArrayHasKey('data', $data);
         $data = $data['data'];
-        
-        $this->assertSame(1, $data['id']);
+
+        $this->assertSame($id, $data['id']);
         $this->assertArrayHasKey('title', $data);
         $this->assertArrayHasKey('rootQuestionId', $data);
 
         $this->assertArrayHasKey('questions', $data);
         $this->assertIsArray($data['questions']);
-        $this->assertNotEmpty($data['questions']); //Pratique
+        $this->assertNotEmpty($data['questions']);
 
         $firstQuestion = $data['questions'][0];
-
         $this->assertArrayHasKey('id', $firstQuestion);
         $this->assertArrayHasKey('title', $firstQuestion);
         $this->assertArrayHasKey('choices', $firstQuestion);
         $this->assertIsArray($firstQuestion['choices']);
 
         $firstChoice = $firstQuestion['choices'][0];
-        
         $this->assertArrayHasKey('id', $firstChoice);
         $this->assertArrayHasKey('content', $firstChoice);
         $this->assertArrayHasKey('nextQuestionId', $firstChoice);

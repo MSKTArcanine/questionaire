@@ -25,37 +25,38 @@ class Question
     /**
      * @var Collection<int, Choice>
      */
-    #[ORM\OneToMany(targetEntity: Choice::class, mappedBy: 'question')]
+    #[ORM\OneToMany(targetEntity: Choice::class, mappedBy: 'question', orphanRemoval: true, cascade: ['persist', 'remove'])]
     private Collection $choices;
 
     #[ORM\ManyToOne(inversedBy: 'questions')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Questionnaire $questionnaire = null;
 
-    /**
-     * @var Collection<int, Questionnaire>
-     */
-    #[ORM\OneToMany(targetEntity: Questionnaire::class, mappedBy: 'rootQuestion')]
-    private Collection $questionnaires;
-
-    /**
-     * @var Collection<int, AnswerSession>
-     */
-    #[ORM\OneToMany(targetEntity: AnswerSession::class, mappedBy: 'currentQuestion')]
-    private Collection $answerSessions;
+    #[ORM\Column(options: ["default" => false])]
+    private bool $isRoot = false;
 
     /**
      * @var Collection<int, Answer>
      */
-    #[ORM\OneToMany(targetEntity: Answer::class, mappedBy: 'question', orphanRemoval: true)]
+    #[ORM\OneToMany(targetEntity: Answer::class, mappedBy: 'question', orphanRemoval: true, cascade: ['persist', 'remove'])]
     private Collection $answers;
 
     public function __construct()
     {
         $this->choices = new ArrayCollection();
-        $this->questionnaires = new ArrayCollection();
-        $this->answerSessions = new ArrayCollection();
         $this->answers = new ArrayCollection();
+    }
+
+    public function isRoot(): bool
+    {
+        return $this->isRoot;
+    }
+
+    public function setIsRoot(bool $isRoot): static
+    {
+        $this->isRoot = $isRoot;
+
+        return $this;
     }
 
     public function getId(): ?int
@@ -128,63 +129,6 @@ class Question
     }
 
     /**
-     * @return Collection<int, Questionnaire>
-     */
-    public function getQuestionnaires(): Collection
-    {
-        return $this->questionnaires;
-    }
-
-    public function addQuestionnaire(Questionnaire $questionnaire): static
-    {
-        if (!$this->questionnaires->contains($questionnaire)) {
-            $this->questionnaires->add($questionnaire);
-            $questionnaire->setRootQuestion($this);
-        }
-
-        return $this;
-    }
-
-    public function removeQuestionnaire(Questionnaire $questionnaire): static
-    {
-        if ($this->questionnaires->removeElement($questionnaire) && $questionnaire->getRootQuestion() === $this) {
-            // set the owning side to null (unless already changed)
-            $questionnaire->setRootQuestion(null);
-        }
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, AnswerSession>
-     */
-    public function getAnswerSessions(): Collection
-    {
-        return $this->answerSessions;
-    }
-
-    public function addAnswerSession(AnswerSession $answerSession): static
-    {
-        if (!$this->answerSessions->contains($answerSession)) {
-            $this->answerSessions->add($answerSession);
-            $answerSession->setCurrentQuestion($this);
-        }
-
-        return $this;
-    }
-
-    public function removeAnswerSession(AnswerSession $answerSession): static
-    {
-        $removed = $this->answerSessions->removeElement($answerSession);
-
-        if ($removed && $answerSession->getCurrentQuestion() === $this) {
-            $answerSession->setCurrentQuestion(null);
-        }
-
-        return $this;
-    }
-
-    /**
      * @return Collection<int, Answer>
      */
     public function getAnswers(): Collection
@@ -204,12 +148,7 @@ class Question
 
     public function removeAnswer(Answer $answer): static
     {
-        if ($this->answers->removeElement($answer)) {
-            // set the owning side to null (unless already changed)
-            if ($answer->getQuestion() === $this) {
-                $answer->setQuestion(null);
-            }
-        }
+        $this->answers->removeElement($answer);
 
         return $this;
     }

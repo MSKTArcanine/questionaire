@@ -7,11 +7,21 @@ import { useState } from "react";
 export default function AdminSearchFormPage() {
   const [query, setQuery] = useState("");
   const { questionnaires, isLoading, error } = useQuestionnaires();
+  const [deletedIds, setDeletedIds] = useState<number[]>([]);
 
   const filtered = questionnaires.filter((f) =>
     f.title.toLowerCase().includes(query.toLowerCase().trim()),
-  );
+  ).filter((f) => !deletedIds.includes(f.id));
 
+  const handleDelete = async (id: number) => {
+    const res = await fetch(`/api/questionnaires/${id}`, {
+      method: "DELETE",
+    });
+    if(!res.ok){
+      return;
+    }
+    setDeletedIds((prev) => [...prev, id]);
+  }
   return (
     <>
       <div className="border-b border-base-300 bg-base-100 px-8 py-4 shrink-0">
@@ -42,7 +52,7 @@ export default function AdminSearchFormPage() {
               {!isLoading
               && !error
               && filtered.map((form) => (
-                <ListItemForm key={form.id} {...form}/>
+                <ListItemForm key={form.id} {...form} onDelete={handleDelete}/>
               ))}
 
               {!isLoading && !error && filtered.length === 0 && (

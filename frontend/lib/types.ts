@@ -48,6 +48,7 @@ export interface PropListSearch {
     id: number;
     title: string;
     description: string | null;
+    onDelete: (id: number) => void;
 }
 
 export interface CreateQuestionnairePayload {
@@ -55,7 +56,6 @@ export interface CreateQuestionnairePayload {
     description?: string | null;
     parentChoiceId?: number | null;
     questionnaireId?: number;
-    //TODO: ZOD surement après en (type) ...
 }
 
 export interface PropQuestionEditor {
