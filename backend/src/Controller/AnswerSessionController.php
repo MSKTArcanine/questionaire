@@ -150,7 +150,7 @@ final class AnswerSessionController extends AbstractController
         return $this->json(['data' => $this->formatSession($answerSession)], 200);
     }
 
-    #[Route(path: '/{id]', name: 'getAS', methods: ['GET'])]
+    #[Route(path: '/{id}', name: 'getAS', methods: ['GET'])]
     public function getAnswerSession(string $id): JsonResponse {
         /**
          * @var AnswerSession | null $answerSession
