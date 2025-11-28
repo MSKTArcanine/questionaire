@@ -182,7 +182,7 @@ final class ChoiceController extends AbstractController
         $this->entityManager->remove($choice);
         $this->entityManager->flush();
 
-        return $this->json(['message' => 'ok']);
+        return new JsonResponse(null, 204);
     }
 
 }
