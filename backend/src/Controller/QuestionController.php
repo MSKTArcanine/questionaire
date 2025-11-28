@@ -7,6 +7,7 @@ use App\Entity\Question;
 use App\Repository\QuestionnaireRepository;
 use App\Repository\QuestionRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use PHPUnit\Util\Json;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -92,7 +93,7 @@ final class QuestionController extends AbstractController
 
         $questionnaire = $this->questionnaireRepository->find($questionnaireId);
         if(!$questionnaire){
-            return $this->json(['error' => 'questionnaire not found'], 405);
+            return $this->json(['error' => 'Questionnaire not found'], 405);
         }
 
         $question = new Question();
@@ -149,10 +150,15 @@ final class QuestionController extends AbstractController
             );
         }
 
+        $questionnaire = $question->getQuestionnaire();
+        if ($questionnaire !== null && $questionnaire->getRootQuestion() === $question) {
+            $questionnaire->setRootQuestion(null);
+        }
+
         $this->entityManager->remove($question);
         $this->entityManager->flush();
 
-        return $this->json(['message' => 'ok']);
+        return new JsonResponse(null, 204);
     }
 
     #[Route(path: '/{id}/tree', name: 'questionTree', methods: ['GET'])]

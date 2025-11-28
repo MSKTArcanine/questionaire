@@ -8,6 +8,7 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class QuestionnairePOSTApiTest extends TestCase
 {
+    private const APP_JSON = 'application/json';
     private string $baseUrl;
     private HttpClientInterface $client;
     protected function setUp(): void
@@ -27,14 +28,14 @@ class QuestionnairePOSTApiTest extends TestCase
                 'title' => 'test questionnaire',
                 'description' => 'test description',
             ],
-            'headers' => ['Content-Type' => 'application/json'],
+            'headers' => ['Content-Type' => self::APP_JSON],
         ]);
 
         $this->assertSame(201, $response->getStatusCode()); //Api renvoi succès ?
 
         $headers = array_change_key_case($response->getHeaders(false), CASE_LOWER);
         $this->assertArrayHasKey('content-type', $headers);
-        $this->assertStringContainsString('application/json', $headers['content-type'][0]);
+        $this->assertStringContainsString(self::APP_JSON, $headers['content-type'][0]);
 
         $data = json_decode($response->getContent(false), true, 512, JSON_THROW_ON_ERROR);
         $this->assertIsArray($data); //JSON correct ?
@@ -49,7 +50,7 @@ class QuestionnairePOSTApiTest extends TestCase
             'json' => [
                 'description' => 'test descriptionFail',
             ],
-            'headers' => ['Content-Type' => 'application/json'],
+            'headers' => ['Content-Type' => self::APP_JSON],
         ]);
 
         $this->assertSame(400, $response->getStatusCode());
