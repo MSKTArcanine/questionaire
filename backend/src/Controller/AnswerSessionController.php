@@ -2,10 +2,12 @@
 
 namespace App\Controller;
 
+use App\Entity\Answer;
 use App\Entity\AnswerSession;
 use App\Entity\Choice;
 use App\Entity\Question;
 use App\Enum\AnswerSessionStatus;
+use App\Repository\AnswerSessionRepository;
 use App\Repository\ChoiceRepository;
 use App\Repository\QuestionnaireRepository;
 use App\Repository\QuestionRepository;
@@ -23,6 +25,8 @@ final class AnswerSessionController extends AbstractController
     public function __construct(
         private readonly QuestionnaireRepository $questionnaireRepository,
         private readonly EntityManagerInterface $entityManager,
+        private readonly AnswerSessionRepository $answerSessionRepository,
+        private readonly ChoiceRepository $choiceRepository,
     ) {}
 
     private function formatSession(AnswerSession $session): array
@@ -79,5 +83,70 @@ final class AnswerSessionController extends AbstractController
 
         return $this->json(['data' => $this->formatSession($answerSession)], 201);
         
+    }
+
+    #[Route(path: '/{slug}/answers', name: 'postAnswers', methods: ['POST'])]
+    public function postAnswers(string $slug, Request $request):JsonResponse{
+        $body = json_decode($request->getContent(), true);
+        $choiceId = $body['choiceId'] ?? null;
+        if($choiceId === null){
+            return $this->json(['error' => 'ChoiceId is required'], 400);
+        }
+
+        /**
+         * @var AnswerSession | null $answerSession
+         */
+        $answerSession = $this->answerSessionRepository->find($slug);
+
+        if(!$answerSession){
+            return $this->json(['error' => 'AnswerSession not found'], 404);
+        }
+
+        if($answerSession->getStatus() === AnswerSessionStatus::FINISHED){
+            return $this->json(['error' => 'AnswerSession is already finished'], 400);
+        }
+
+        $currentQuestion = $answerSession->getCurrentQuestion();
+        if(!$currentQuestion){
+            return $this->json(['error' => 'Current question not found'], 500);
+        }
+
+        /**
+         * @var Choice | null $choice
+         */
+        $choice = $this->choiceRepository->find($choiceId);
+        if(!$choice){
+            return $this->json(['error' => 'Choice not found'], 404);
+        }
+
+        if($choice->getQuestion()?->getId() !== $currentQuestion->getId()){
+            return $this->json(['error' => 'Choice not for currentQuestion'], 400);
+        }
+
+        // Creation de l'answer
+        $answer = new Answer();
+        $answer->setAnswerSession($answerSession);
+        $answer->setQuestion($currentQuestion);
+        $answer->setChoice($choice);
+
+        $answerSession->addAnswer($answer);
+
+        // La ça marche
+        $nextQuestion = $choice->getNextQuestion();
+        if($nextQuestion !== null){
+            $answerSession->setCurrentQuestion($nextQuestion);
+        }
+
+        if($nextQuestion !== null){
+            $answerSession->setCurrentQuestion($nextQuestion);
+        } else {
+            $answerSession->setCurrentQuestion(null);
+            $answerSession->setStatusFinished();
+        }
+
+        $this->entityManager->persist($answer);
+        $this->entityManager->flush();
+
+        return $this->json(['data' => $this->formatSession($answerSession)], 200);
     }
 }
