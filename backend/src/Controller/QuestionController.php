@@ -4,10 +4,11 @@ namespace App\Controller;
 
 use App\Entity\Choice;
 use App\Entity\Question;
+use App\Repository\AnswerSessionRepository;
+use App\Repository\ChoiceRepository;
 use App\Repository\QuestionnaireRepository;
 use App\Repository\QuestionRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use PHPUnit\Util\Json;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -22,6 +23,8 @@ final class QuestionController extends AbstractController
     public function __construct(
         private readonly QuestionRepository $questionRepository,
         private readonly QuestionnaireRepository $questionnaireRepository,
+        private readonly ChoiceRepository $choiceRepository,
+        private readonly AnswerSessionRepository $answerSessionRepository,
         private readonly EntityManagerInterface $entityManager,
     ){}
 
@@ -99,10 +102,12 @@ final class QuestionController extends AbstractController
         $question = new Question();
         $question->setTitle($title);
         $question->setDescription($description);
+        $questionnaire->addQuestion($question);
         $question->setQuestionnaire($questionnaire);
 
         if($questionnaire->getRootQuestion() === null){ //Ajout de la question root.
             $question->setIsRoot(true); //On met le flag
+            $questionnaire->setRootQuestion($question);
         }
 
         $this->entityManager->persist($question);
@@ -146,18 +151,40 @@ final class QuestionController extends AbstractController
 
         if (!$question) {
             return $this->json(
-                ['error' => self::QUESTION_NOT_FOUND],404
+                ['error' => self::QUESTION_NOT_FOUND],
+                404
             );
         }
 
+        // 1) Si cette question est la root du questionnaire, on la retire
         $questionnaire = $question->getQuestionnaire();
         if ($questionnaire !== null && $questionnaire->getRootQuestion() === $question) {
             $questionnaire->setRootQuestion(null);
         }
 
+        // 2) Tous les Choice qui pointent vers CETTE question via nextQuestion
+        $choicesPointingHere = $this->choiceRepository->findBy([
+            'nextQuestion' => $question,
+        ]);
+
+        foreach ($choicesPointingHere as $choice) {
+            $choice->setNextQuestion(null);
+        }
+
+        // 3) Toutes les AnswerSession
+        $sessions = $this->answerSessionRepository->findBy([
+            'currentQuestion' => $question,
+        ]);
+
+        foreach ($sessions as $session) {
+            $session->setCurrentQuestion(null);
+        }
+
+        // 4) Suppression de la question
         $this->entityManager->remove($question);
         $this->entityManager->flush();
 
+        // 204 = No Content => corps vide
         return new JsonResponse(null, 204);
     }
 

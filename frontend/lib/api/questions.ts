@@ -51,11 +51,24 @@ export async function updateQuestion(id: number, payload: UpdateQuestionPayload)
     return mapApiQuestionToNode(data.data);
 }
 
-export async function getQuestionTree(id: number):Promise<QuestionNode>{
+export async function getQuestionTree(id: number):Promise<QuestionNode | null>{
     const res = await fetch(`/api/questions/${id}/tree`, {cache: "no-store"});
+    if(res.status === 404){ //Suppression de la root.
+        return null;
+    }
     if(!res.ok){
         throw new Error(`Erreur HTTP ${res.status} /questions/{id}/tree`);
     }
     const data: ApiResponseUnique<QuestionNode> = await res.json();
     return mapApiQuestionToNode(data.data);
+}
+
+export async function deleteQuestion(id: number): Promise<void>{
+    const res = await fetch(`/api/questions/${id}`, {
+        method: "DELETE",
+        cache: "no-store",
+    });
+    if(!res.ok){
+        throw new Error(`Erreur HTTP ${res.status} /questions/{id} [DELETE]`);
+    }
 }

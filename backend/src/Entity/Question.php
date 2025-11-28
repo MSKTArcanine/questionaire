@@ -26,6 +26,7 @@ class Question
      * @var Collection<int, Choice>
      */
     #[ORM\OneToMany(targetEntity: Choice::class, mappedBy: 'question', orphanRemoval: true, cascade: ['persist', 'remove'])]
+    #[ORM\OrderBy(['id' => 'ASC'])]
     private Collection $choices;
 
     #[ORM\ManyToOne(inversedBy: 'questions')]

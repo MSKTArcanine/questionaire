@@ -97,6 +97,7 @@ export type UpdateChoicePayload = {
 export interface QuestionTreeProps {
     root: QuestionNode;
     onEditQuestion: (question: QuestionNode) => void;
+    onDeleteQuestion: (questionId: number) => void;
     onAddQuestionToChoice: (choiceId: number) => void;
 
     onCreateChoice: (questionId: number, content: string) => void | Promise<void>;

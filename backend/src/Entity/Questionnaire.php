@@ -26,6 +26,7 @@ class Questionnaire
      * @var Collection<int, Question>
      */
     #[ORM\OneToMany(targetEntity: Question::class, mappedBy: 'questionnaire', orphanRemoval: true, cascade: ['persist', 'remove'])]
+    #[ORM\OrderBy(['title' => 'ASC'])]
     private Collection $questions;
 
     /**

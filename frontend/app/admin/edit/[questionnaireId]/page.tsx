@@ -4,7 +4,7 @@ import QuestionEditor from "@/component/admin/QuestionEditor";
 import { QuestionTree } from "@/component/admin/QuestionTree";
 import { createChoice, deleteChoice, updateChoice } from "@/lib/api/choices";
 import { getQuestionnaire } from "@/lib/api/questionnaires";
-import { createQuestion, getQuestionTree, updateQuestion } from "@/lib/api/questions";
+import { createQuestion, deleteQuestion, getQuestionTree, updateQuestion } from "@/lib/api/questions";
 import { QuestionNode } from "@/lib/types";
 import updateQuestionInTree from "@/lib/utils/updateQuestionInTree";
 import { useParams } from "next/navigation";
@@ -18,31 +18,38 @@ export default function AdminQuestionDetailPage() {
   const [activeQuestion, setActiveQuestion] = useState<QuestionNode | null>(
     null,
   );
-  const [questionnaireId, setQuestionnaireId] = useState<number | null>(null);
   const [parentChoiceIdForNewQuestion, setParentChoiceIdForNewQuestion] = useState<number | null>(null);
   const [questionTree, setQuestionTree] = useState<QuestionNode | null>(null);
   const [rootQuestionId, setRootQuestionId] = useState<number | null>(null);
   const [questionnaireTitle, setQuestionnaireTitle] = useState<string>("");
   
   async function reloadTree(currentRootId?: number | null) {
-    const id = currentRootId ?? rootQuestionId;
-    if (!id) return;
-    const root = await getQuestionTree(id);
-    setQuestionTree(root);
+    try {
+      const questionnaire = await getQuestionnaire(questionnaireIdParam);
+      setQuestionnaireTitle(questionnaire.title);
+      setRootQuestionId(questionnaire.rootQuestionId);
+
+      if(!questionnaire.rootQuestionId){
+        setQuestionTree(null);
+        return;
+      }
+
+      const root = await getQuestionTree(currentRootId ?? questionnaire.rootQuestionId);
+      setQuestionTree(root);
+    }catch (error) {
+      console.error("Erreur rechargement arbre :", error);
+    }
   }
 
   useEffect(() => {
     (async () => {
       try{
-      const questionnaire = await getQuestionnaire(questionnaireIdParam);
-      setQuestionnaireTitle(questionnaire.title);
-      setQuestionnaireId(questionnaire.id);
-      setRootQuestionId(questionnaire.rootQuestionId);
-      await reloadTree(questionnaire.rootQuestionId);
+        await reloadTree();
       } catch (error) {
         console.error("Erreur chargement questionnaire : ", error);
       }
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [questionnaireIdParam]);
   
   async function handleCreateChoice(questionId: number, content: string) {
@@ -71,7 +78,7 @@ export default function AdminQuestionDetailPage() {
         return;
       }
 
-      if(questionnaireId == null){
+      if(questionnaireIdParam == null){
         console.error("Pas de questionnaire");
         setActiveQuestion(null);
         return;
@@ -81,8 +88,9 @@ export default function AdminQuestionDetailPage() {
         const createdQuestion = await createQuestion({
           title: updatedQuestion.title,
           description: updatedQuestion.description,
-          questionnaireId: questionnaireId,
+          questionnaireId: questionnaireIdParam,
         });
+        setRootQuestionId(createdQuestion.id);
         const root = await getQuestionTree(createdQuestion.id);
         setQuestionTree(root);
         setActiveQuestion(null);
@@ -93,19 +101,17 @@ export default function AdminQuestionDetailPage() {
       const createdQuestion = await createQuestion({
         title: updatedQuestion.title,
         description: updatedQuestion.description,
-        questionnaireId: questionnaireId,
+        questionnaireId: questionnaireIdParam,
       });
 
       await updateChoice(parentChoiceIdForNewQuestion, { //Liaison question -> réponse parent.
         nextQuestionId: createdQuestion.id,
       });
 
-      const root = await getQuestionTree(rootQuestionId ?? createdQuestion.id);
-      setQuestionTree(root);
+      await reloadTree();
+
       setActiveQuestion(null);
       setParentChoiceIdForNewQuestion(null);
-
-      await reloadTree();
 
     } catch (error) {
       console.error("Erreur sauvegarde question :", error);
@@ -142,6 +148,15 @@ export default function AdminQuestionDetailPage() {
       console.error("Erreur lors de la suppression du choix :", error);
     }
   }
+    async function handleDeleteQuestion(questionId: number) {
+    try {
+      await deleteQuestion(questionId);
+      
+      await reloadTree();
+    } catch (error) {
+      console.error("Erreur lors de la suppression de la question :", error);
+    }
+  }
   
   return (
     <>
@@ -171,6 +186,7 @@ export default function AdminQuestionDetailPage() {
       <QuestionTree
       root={questionTree}
       onEditQuestion={setActiveQuestion}
+      onDeleteQuestion={handleDeleteQuestion}
       onAddQuestionToChoice={handleAddQuestionForChoice}
       onCreateChoice={handleCreateChoice}
       onUpdateChoice={handleUpdateChoice}
