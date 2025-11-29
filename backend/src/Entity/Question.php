@@ -46,6 +46,9 @@ class Question
     #[ORM\Column(enumType: QuestionType::class)]
     private ?QuestionType $type = null;
 
+    #[ORM\OneToOne(mappedBy: 'question', cascade: ['persist', 'remove'], orphanRemoval:true)]
+    private ?QuestionMedia $questionMedia = null;
+
     public function __construct()
     {
         $this->choices = new ArrayCollection();
@@ -167,6 +170,23 @@ class Question
     public function setType(QuestionType $type): static
     {
         $this->type = $type;
+
+        return $this;
+    }
+
+    public function getQuestionMedia(): ?QuestionMedia
+    {
+        return $this->questionMedia;
+    }
+
+    public function setQuestionMedia(QuestionMedia $questionMedia): static
+    {
+        // set the owning side of the relation if necessary
+        if ($questionMedia->getQuestion() !== $this) {
+            $questionMedia->setQuestion($this);
+        }
+
+        $this->questionMedia = $questionMedia;
 
         return $this;
     }
