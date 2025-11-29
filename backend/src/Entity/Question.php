@@ -50,6 +50,7 @@ class Question
     {
         $this->choices = new ArrayCollection();
         $this->answers = new ArrayCollection();
+        $this->type = QuestionType::RADIO;
     }
 
     public function isRoot(): bool
