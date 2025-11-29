@@ -104,3 +104,14 @@ export interface QuestionTreeProps {
     onUpdateChoice: (choiceId: number, content: string) => void | Promise<void>;
     onDeleteChoice: (choiceId: number) => void | Promise<void>;
 }
+
+export type AnswerSession = {
+    id: string;
+    questionnaire: Questionnaire;
+    current_question: QuestionWithChoices | null;
+    finished: boolean;
+}
+
+export interface AnswerSessionApiResponse {
+    data: AnswerSession;
+}

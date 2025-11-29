@@ -20,8 +20,6 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/api/sessions', name: 'api_choices_')]
 final class AnswerSessionController extends AbstractController
 {
-    private const QUESTION_ID_PATH = '/{id}'; //Sonar.
-    private const CHOICE_NOT_FOUND = 'Choice not found';
     public function __construct(
         private readonly QuestionnaireRepository $questionnaireRepository,
         private readonly EntityManagerInterface $entityManager,
@@ -61,6 +59,7 @@ final class AnswerSessionController extends AbstractController
     {
         $body = json_decode($request->getContent(), true);
         $publicId = $body['slug'] ?? null;
+        
         if($publicId === null){
             return $this->json(['error' => 'Questionnaire not found'], 404);
         }
