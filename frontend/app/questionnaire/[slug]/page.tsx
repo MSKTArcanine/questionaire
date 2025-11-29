@@ -108,7 +108,19 @@ export default function FormFillPage() {
       setSubmitting(true);
       setError(null);
 
-      const res = await fetch(
+      let res: Response;
+
+      if(isMultimedia){
+        const formData = new FormData();
+        formData.append("choiceId", String(choiceIdEntreLesDeux));
+        formData.append("file", file!);
+
+        res = await fetch(`/api/sessions/${answerSession.id}/answers`, {
+          method: "POST",
+          body: formData,
+        });
+      }else{
+       res = await fetch(
         `/api/sessions/${answerSession.id}/answers`,
         {
           method: "POST",
@@ -117,7 +129,7 @@ export default function FormFillPage() {
           },
           body: JSON.stringify({ choiceId: choiceIdEntreLesDeux }),
         }
-      );
+      );}
 
       if (!res.ok) {
         const text = await res.text().catch(() => "");

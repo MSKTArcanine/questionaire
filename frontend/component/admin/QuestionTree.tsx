@@ -24,7 +24,7 @@ export function QuestionTree(prop : Readonly<QuestionTreeProps>): JSX.Element {
             console.error("Erreur suppression question :", error);
         }
     }
-    
+
     async function handleConfirmEditChoice(choiceId: number) {
         const content = editingChoiceContent.trim();
         if(!content) return;
@@ -96,7 +96,7 @@ export function QuestionTree(prop : Readonly<QuestionTreeProps>): JSX.Element {
                 </p>
                 </div>
                 
-                <div className="flex flex items-end gap-1">
+                <div className="flex items-end gap-1">
                 <button
                 type="button"
                 className="btn btn-xs btn-outline btn-primary"

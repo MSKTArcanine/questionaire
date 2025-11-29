@@ -14,6 +14,7 @@ use App\Repository\QuestionnaireRepository;
 use App\Repository\QuestionRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
@@ -92,8 +93,24 @@ final class AnswerSessionController extends AbstractController
 
     #[Route(path: '/{slug}/answers', name: 'postAnswers', methods: ['POST'])]
     public function postAnswers(string $slug, Request $request):JsonResponse{
+        //Du coup faut verif le content :
+        $contentType = $request->headers->get('Content-Type', '');
+        $choiceId = null;
+        /**
+         * @var UploadedFile|null $uploadedFile
+         */
+        $uploadedFile = null;
         $body = json_decode($request->getContent(), true);
-        $choiceId = $body['choiceId'] ?? null;
+
+
+        if (str_starts_with($contentType, 'application/json')) {
+            $body = json_decode($request->getContent(), true) ?? [];
+            $choiceId = $body['choiceId'] ?? null;
+        }else{
+            $choiceId = $request->request->get('choiceId');
+            $uploadedFile = $request->files->get('file');
+        }
+
         if($choiceId === null){
             return $this->json(['error' => 'ChoiceId is required'], 400);
         }
@@ -133,6 +150,38 @@ final class AnswerSessionController extends AbstractController
         $answer->setAnswerSession($answerSession);
         $answer->setQuestion($currentQuestion);
         $answer->setChoice($choice);
+
+        if($uploadedFile instanceof UploadedFile){
+            $mime = $uploadedFile->getMimeType() ?? '';
+            if(!in_array($mime, ['image/png', 'video/mp4'], true)){
+                return $this->json(['error' => 'Unsupported media type'], 400);
+            }
+
+            /** @var string $uploadDir */
+            $uploadDir = $this->getParameter('answer_upload_dir');
+            if(!is_dir($uploadDir)){
+                mkdir($uploadDir, 0775, true);
+            }
+
+            $extension = $uploadedFile->guessExtension() ?: 'bin';
+            $safeBase = pathinfo($uploadedFile->getClientOriginalName(), PATHINFO_FILENAME);
+            $safeBase = preg_replace('/[^a-zA-Z0-9_-]/', '_', $safeBase);
+
+            $newfilename = sprintf(
+                '%s_%s.%s',
+                (string) $answerSession->getId(),
+                uniqid($safeBase . '_', true),
+                $extension
+            );
+
+            $uploadedFile->move($uploadDir, $newfilename);
+
+            $publicPaht = '/uploads/answers/' . $newfilename;
+
+            $answer->setMediaPath($publicPaht);
+            $answer->setMediaName($uploadedFile->getClientOriginalName());
+            $answer->setMediaMimeType($mime);
+        }
 
         $answerSession->addAnswer($answer);
 

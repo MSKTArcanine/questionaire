@@ -21,6 +21,7 @@ services:
       - "8000"
     volumes:
     - ./backend:/app
+    - ./storage/uploads/answers:/app/public/uploads/answers
 
   frontend:
     build: ./frontend
