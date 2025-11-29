@@ -3,6 +3,10 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { AnswerSessionApiResponse } from "@/lib/types";
+import FormFillHeader from "@/component/questionnaire/FormFillHeader";
+import FormFillFooter from "@/component/questionnaire/FormFillFooter";
+import QuestionnaireHeader from "@/component/questionnaire/QuestionnaireHeader";
+import QuestionNode from "@/component/questionnaire/QuestionNode";
 
 type AnswerSession = AnswerSessionApiResponse["data"];
 
@@ -10,7 +14,9 @@ export default function FormFillPage() {
   const params = useParams<{ slug: string }>();
   const slug = params.slug;
 
-  const [answerSession, setAnswerSession] = useState<AnswerSession | null>(null);
+  const [answerSession, setAnswerSession] = useState<AnswerSession | null>(
+    null
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -71,15 +77,16 @@ export default function FormFillPage() {
 
   const currentQuestion = answerSession?.current_question ?? null;
 
+  // Reset du choix quand la question change
   useEffect(() => {
     setSelectedChoiceId(null);
   }, [currentQuestion?.id]);
-  
+
   const questionnaire = answerSession?.questionnaire ?? null;
   const finished = answerSession?.finished ?? false;
 
   const handleNextClick = async () => {
-    if(!answerSession || !currentQuestion || selectedChoiceId === null){
+    if (!answerSession || !currentQuestion || selectedChoiceId === null) {
       return;
     }
 
@@ -87,41 +94,38 @@ export default function FormFillPage() {
       setSubmitting(true);
       setError(null);
 
-      const res = await fetch(`/api/sessions/${answerSession.id}/answers`,
+      const res = await fetch(
+        `/api/sessions/${answerSession.id}/answers`,
         {
           method: "POST",
           headers: {
-            "Content-Type":"application/json",
+            "Content-Type": "application/json",
           },
-          body: JSON.stringify({choiceId : selectedChoiceId})
+          body: JSON.stringify({ choiceId: selectedChoiceId }),
         }
       );
 
-      if(!res.ok){
+      if (!res.ok) {
         const text = await res.text().catch(() => "");
         console.error("Erreur d'envoi :", res.status, text || "no body");
-      throw new Error(`HTTP ${res.status}`);
+        throw new Error(`HTTP ${res.status}`);
       }
 
       const body = (await res.json()) as AnswerSessionApiResponse;
       setAnswerSession(body.data);
-    }catch(e){
+    } catch (e) {
       console.error(e);
       setError("Erreur enregistrement réponse");
-    }finally{
+    } finally {
       setSubmitting(false);
     }
   };
+
   // Loading...
   if (loading && !answerSession) {
     return (
       <main className="min-h-screen flex flex-col bg-base-200">
-        <header className="w-full border-b border-base-300 bg-base-100 px-8 py-4">
-          <h1 className="text-3xl font-bold text-center">
-            Remplissage du formulaire
-          </h1>
-        </header>
-
+        <FormFillHeader />
         <section className="flex-1 flex items-center justify-center">
           <div className="max-w-md w-full bg-base-100 rounded-box shadow-lg border border-base-300 p-8 text-center">
             <span className="loading loading-spinner loading-lg" />
@@ -134,16 +138,11 @@ export default function FormFillPage() {
     );
   }
 
-  // Erreur
+  // Erreur, pas de session, pas de questionnaire
   if (error || !answerSession || !questionnaire) {
     return (
       <main className="min-h-screen flex flex-col bg-base-200">
-        <header className="w-full border-b border-base-300 bg-base-100 px-8 py-4">
-          <h1 className="text-3xl font-bold text-center">
-            Remplissage du formulaire
-          </h1>
-        </header>
-
+        <FormFillHeader />
         <section className="flex-1 flex items-center justify-center px-8 py-8">
           <div className="max-w-md w-full bg-base-100 rounded-box shadow-lg border border-error p-8 text-center">
             <h2 className="text-2xl font-semibold mb-4">Oups…</h2>
@@ -156,34 +155,17 @@ export default function FormFillPage() {
             </p>
           </div>
         </section>
+        <FormFillFooter />
       </main>
     );
   }
-  // pas de session ou questionnaire
-  if(!answerSession || !questionnaire){
-    return null;
-  }
 
-  // Session fini
+  // Session finie
   if (finished || !currentQuestion) {
     return (
       <main className="min-h-screen flex flex-col bg-base-200">
-        <header className="w-full border-b border-base-300 bg-base-100 px-8 py-4">
-          <h1 className="text-3xl font-bold text-center">
-            Remplissage du formulaire
-          </h1>
-        </header>
-
-        <section className="w-full border-b border-base-300 bg-base-100 px-8 py-4">
-          <h2 className="text-2xl font-semibold text-center">
-            {questionnaire.title}
-          </h2>
-          {questionnaire.description && (
-            <p className="mt-2 text-center text-base-content/70 max-w-2xl mx-auto">
-              {questionnaire.description}
-            </p>
-          )}
-        </section>
+        <FormFillHeader />
+        <QuestionnaireHeader {...questionnaire} />
 
         <section className="flex-1 flex items-center justify-center px-8 py-8">
           <div className="max-w-3xl w-full bg-base-100 rounded-box shadow-lg border border-base-300 p-10 text-center">
@@ -191,135 +173,31 @@ export default function FormFillPage() {
               Merci d&apos;avoir répondu à ce questionnaire
             </h3>
             <p className="text-base-content/70">
-              Vous pouvez désormais fermer cette fenêtre ou revenir à l&apos;accueil
-              de la borne.
+              Vous pouvez désormais fermer cette fenêtre ou revenir à
+              l&apos;accueil de la borne.
             </p>
           </div>
         </section>
 
-        <footer className="w-full border-t border-base-300 bg-base-100 px-8 py-4">
-          <div className="flex gap-4 text-sm text-base-content/70">
-            <button className="btn btn-ghost btn-xs rounded-none">
-              Mentions légales
-            </button>
-            <button className="btn btn-ghost btn-xs rounded-none">
-              Contact
-            </button>
-            <button className="btn btn-ghost btn-xs rounded-none">
-              Je sais pas...
-            </button>
-          </div>
-        </footer>
+        <FormFillFooter />
       </main>
     );
   }
 
-  // Layout principal avec la question et les radios
+  // Layout avec la question REFAIRE UN LAYOUT PLUS TARD
   return (
     <main className="min-h-screen flex flex-col bg-base-200">
-      {/* header */}
-      <header className="w-full border-b border-base-300 bg-base-100 px-8 py-4">
-        <h1 className="text-3xl font-bold text-center">
-          Remplissage du formulaire
-        </h1>
-      </header>
-
-      {/* Titre formulaire */}
-      <section className="w-full border-b border-base-300 bg-base-100 px-8 py-4">
-        <h2 className="text-2xl font-semibold text-center">
-          {questionnaire.title}
-        </h2>
-        {questionnaire.description && (
-          <p className="mt-2 text-center text-base-content/70 max-w-2xl mx-auto">
-            {questionnaire.description}
-          </p>
-        )}
-      </section>
-
-      {/* Zone centrale question + bouton suivant */}
-      <section className="flex-1 flex flex-row gap-4 px-8 py-8">
-        {/* Colonne centrale */}
-        <div className="flex-1 flex flex-col items-stretch border border-dashed border-error rounded-xl p-8 bg-base-100">
-          {/* Titre & description de la question */}
-          <div className="mb-8 text-center">
-            <h3 className="text-2xl font-semibold mb-2">
-              {currentQuestion.title}
-            </h3>
-            {currentQuestion.description && (
-              <p className="text-base-content/70">
-                {currentQuestion.description}
-              </p>
-            )}
-          </div>
-
-          {/* Message d'erreur */}
-          {error && (
-            <p className="mb-4 text-error text-sm text-center">{error}</p>
-          )}
-
-          {/* Carte choices */}
-          <div className="flex-1 flex items-center justify-center">
-            <div className="w-full max-w-3xl border border-base-300 rounded-xl p-6">
-              <form className="flex flex-col gap-3">
-                {currentQuestion.choices.map((choice) => (
-                  <label
-                    key={choice.id}
-                    className="flex items-center gap-3 px-4 py-3 rounded-xl bg-base-200 cursor-pointer hover:bg-base-300 transition-colors"
-                  >
-                    <input
-                      type="radio"
-                      name={`question-${currentQuestion.id}`}
-                      className="radio radio-sm"
-                      checked={selectedChoiceId === choice.id} //Full state pour l'instant
-                      onChange={() => setSelectedChoiceId(choice.id)}
-                      disabled={submitting}
-                    />
-                    <span className="text-left leading-snug">
-                      {choice.content}
-                    </span>
-                  </label>
-                ))}
-              </form>
-            </div>
-          </div>
-        </div>
-
-        {/* Colonne droite pour le bouton Suivant */}
-        <aside className="w-40 flex items-center">
-          <div className="w-full h-full border border-base-300 rounded-xl flex items-center justify-center">
-            <button
-              type="button"
-              className="btn btn-primary btn-block max-w-[120px]"
-              onClick={handleNextClick}
-              disabled={selectedChoiceId === null || submitting}
-            >
-              {submitting ? (
-                <>
-                  <span className="loading loading-spinner loading-xs mr-2"/>
-                  Envoi...
-                </>
-              ):(
-                "Suivant"
-              )}
-            </button>
-          </div>
-        </aside>
-      </section>
-
-      {/* Footer */}
-      <footer className="w-full border-t border-base-300 bg-base-100 px-8 py-4">
-        <div className="flex gap-4 text-sm text-base-content/70">
-          <button className="btn btn-ghost btn-xs rounded-none">
-            Mentions légales
-          </button>
-          <button className="btn btn-ghost btn-xs rounded-none">
-            Contact
-          </button>
-          <button className="btn btn-ghost btn-xs rounded-none">
-            Je sais pas...
-          </button>
-        </div>
-      </footer>
+      <FormFillHeader />
+      <QuestionnaireHeader {...questionnaire} />
+      <QuestionNode
+        question={currentQuestion}
+        error={error}
+        selectedChoiceId={selectedChoiceId}
+        submitting={submitting}
+        onSelectChoice={setSelectedChoiceId}
+        onNext={handleNextClick}
+      />
+      <FormFillFooter />
     </main>
   );
 }

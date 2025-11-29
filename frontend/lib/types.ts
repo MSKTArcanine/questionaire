@@ -115,3 +115,12 @@ export type AnswerSession = {
 export interface AnswerSessionApiResponse {
     data: AnswerSession;
 }
+
+export type QuestionNodeProps = {
+  question: QuestionWithChoices;
+  error: string | null;
+  selectedChoiceId: number | null;
+  submitting: boolean;
+  onSelectChoice: (id: number) => void;
+  onNext: () => void;
+};
