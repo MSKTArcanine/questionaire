@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Enum\QuestionType;
 use App\Repository\QuestionRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -41,6 +42,9 @@ class Question
      */
     #[ORM\OneToMany(targetEntity: Answer::class, mappedBy: 'question', orphanRemoval: true, cascade: ['persist', 'remove'])]
     private Collection $answers;
+
+    #[ORM\Column(enumType: QuestionType::class)]
+    private ?QuestionType $type = null;
 
     public function __construct()
     {
@@ -150,6 +154,18 @@ class Question
     public function removeAnswer(Answer $answer): static
     {
         $this->answers->removeElement($answer);
+
+        return $this;
+    }
+
+    public function getType(): ?QuestionType
+    {
+        return $this->type;
+    }
+
+    public function setType(QuestionType $type): static
+    {
+        $this->type = $type;
 
         return $this;
     }
