@@ -37,6 +37,7 @@ final class AnswerSessionController extends AbstractController
             'questionnaire' => [
                 'id'    => (string) $questionnaire->getPublicId(),
                 'title' => $questionnaire->getTitle(),
+                'description' => $questionnaire->getDescription(),
             ],
             'current_question' => $currentQuestion ? [
                 'id'    => $currentQuestion->getId(),
@@ -132,9 +133,6 @@ final class AnswerSessionController extends AbstractController
 
         // La ça marche
         $nextQuestion = $choice->getNextQuestion();
-        if($nextQuestion !== null){
-            $answerSession->setCurrentQuestion($nextQuestion);
-        }
 
         if($nextQuestion !== null){
             $answerSession->setCurrentQuestion($nextQuestion);

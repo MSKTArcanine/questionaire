@@ -10,9 +10,12 @@ export default function FormFillPage() {
   const params = useParams<{ slug: string }>();
   const slug = params.slug;
 
-  const [session, setSession] = useState<AnswerSession | null>(null);
+  const [answerSession, setAnswerSession] = useState<AnswerSession | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [selectedChoiceId, setSelectedChoiceId] = useState<number | null>(null);
+  const [submitting, setSubmitting] = useState<boolean>(false);
 
   useEffect(() => {
     if (!slug) return;
@@ -35,7 +38,7 @@ export default function FormFillPage() {
         if (!res.ok) {
           const text = await res.text().catch(() => "");
           console.error(
-            "Erreur création session:",
+            "Erreur création answerSession:",
             res.status,
             text || "<no body>"
           );
@@ -44,12 +47,13 @@ export default function FormFillPage() {
 
         const json = (await res.json()) as AnswerSessionApiResponse;
         if (!cancelled) {
-          setSession(json.data);
+          setAnswerSession(json.data);
+          setSelectedChoiceId(null);
         }
       } catch (e) {
         console.error(e);
         if (!cancelled) {
-          setError("Impossible de créer la session du questionnaire.");
+          setError("Impossible de créer la answerSession du questionnaire.");
         }
       } finally {
         if (!cancelled) {
@@ -65,11 +69,51 @@ export default function FormFillPage() {
     };
   }, [slug]);
 
-  const questionnaire = session?.questionnaire ?? null;
-  const currentQuestion = session?.current_question ?? null;
-  const finished = session?.finished ?? false;
+  const currentQuestion = answerSession?.current_question ?? null;
 
-  if (loading && !session) {
+  useEffect(() => {
+    setSelectedChoiceId(null);
+  }, [currentQuestion?.id]);
+  
+  const questionnaire = answerSession?.questionnaire ?? null;
+  const finished = answerSession?.finished ?? false;
+
+  const handleNextClick = async () => {
+    if(!answerSession || !currentQuestion || selectedChoiceId === null){
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      setError(null);
+
+      const res = await fetch(`/api/sessions/${answerSession.id}/answers`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type":"application/json",
+          },
+          body: JSON.stringify({choiceId : selectedChoiceId})
+        }
+      );
+
+      if(!res.ok){
+        const text = await res.text().catch(() => "");
+        console.error("Erreur d'envoi :", res.status, text || "no body");
+      throw new Error(`HTTP ${res.status}`);
+      }
+
+      const body = (await res.json()) as AnswerSessionApiResponse;
+      setAnswerSession(body.data);
+    }catch(e){
+      console.error(e);
+      setError("Erreur enregistrement réponse");
+    }finally{
+      setSubmitting(false);
+    }
+  };
+  // Loading...
+  if (loading && !answerSession) {
     return (
       <main className="min-h-screen flex flex-col bg-base-200">
         <header className="w-full border-b border-base-300 bg-base-100 px-8 py-4">
@@ -90,8 +134,8 @@ export default function FormFillPage() {
     );
   }
 
-  // 3) Erreur
-  if (error || !session || !questionnaire) {
+  // Erreur
+  if (error || !answerSession || !questionnaire) {
     return (
       <main className="min-h-screen flex flex-col bg-base-200">
         <header className="w-full border-b border-base-300 bg-base-100 px-8 py-4">
@@ -115,8 +159,12 @@ export default function FormFillPage() {
       </main>
     );
   }
+  // pas de session ou questionnaire
+  if(!answerSession || !questionnaire){
+    return null;
+  }
 
-  // Session finie (au cas ou)
+  // Session fini
   if (finished || !currentQuestion) {
     return (
       <main className="min-h-screen flex flex-col bg-base-200">
@@ -166,7 +214,7 @@ export default function FormFillPage() {
     );
   }
 
-  // 5) Layout principal avec la question et les radios
+  // Layout principal avec la question et les radios
   return (
     <main className="min-h-screen flex flex-col bg-base-200">
       {/* header */}
@@ -204,10 +252,14 @@ export default function FormFillPage() {
             )}
           </div>
 
+          {/* Message d'erreur */}
+          {error && (
+            <p className="mb-4 text-error text-sm text-center">{error}</p>
+          )}
+
           {/* Carte choices */}
           <div className="flex-1 flex items-center justify-center">
             <div className="w-full max-w-3xl border border-base-300 rounded-xl p-6">
-              {/* TODO: WIRE avec le bouton */}
               <form className="flex flex-col gap-3">
                 {currentQuestion.choices.map((choice) => (
                   <label
@@ -218,6 +270,9 @@ export default function FormFillPage() {
                       type="radio"
                       name={`question-${currentQuestion.id}`}
                       className="radio radio-sm"
+                      checked={selectedChoiceId === choice.id} //Full state pour l'instant
+                      onChange={() => setSelectedChoiceId(choice.id)}
+                      disabled={submitting}
                     />
                     <span className="text-left leading-snug">
                       {choice.content}
@@ -232,12 +287,20 @@ export default function FormFillPage() {
         {/* Colonne droite pour le bouton Suivant */}
         <aside className="w-40 flex items-center">
           <div className="w-full h-full border border-base-300 rounded-xl flex items-center justify-center">
-            {/* TODO: WIRE*/}
             <button
               type="button"
               className="btn btn-primary btn-block max-w-[120px]"
+              onClick={handleNextClick}
+              disabled={selectedChoiceId === null || submitting}
             >
-              Suivant
+              {submitting ? (
+                <>
+                  <span className="loading loading-spinner loading-xs mr-2"/>
+                  Envoi...
+                </>
+              ):(
+                "Suivant"
+              )}
             </button>
           </div>
         </aside>
