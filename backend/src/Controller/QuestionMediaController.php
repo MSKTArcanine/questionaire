@@ -13,6 +13,7 @@ use App\Repository\ChoiceRepository;
 use App\Repository\QuestionnaireRepository;
 use App\Repository\QuestionRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Error;
 use RuntimeException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -44,26 +45,20 @@ final class QuestionMediaController extends AbstractController
             return $this->json(['error' => 'File is required'], 400);
         }
 
-        $typeRaw = $request->request->get('type', 'IMAGE');
-        try {
-            $mediaType = MediaType::from($typeRaw);
-        } catch (ValueError) {
-            return $this->json(['error' => 'Invalid media type'], 400);
-        }
-
         $altText = $request->request->get('altText') ?: null;
 
         $mime = $uploadedFile->getMimeType() ?? '';
-        if (!\in_array($mime, ['image/png', 'image/jpeg', 'video/mp4'], true)) {
+        
+        try {
+            $allowedMime = AllowedMimeType::from($mime);
+        } catch(ValueError){
             return $this->json(['error' => 'Unsupported media type'], 400);
         }
 
-        // Adapter ce match à tes valeurs d'AllowedMimeType
-        $allowedMime = match ($mime) {
-            'image/png' => AllowedMimeType::PNG,
-            'image/jpeg' => AllowedMimeType::JPG,
-            'video/mp4' => AllowedMimeType::MP4,
-            default => throw new RuntimeException('Mime non géré'),
+        $mediaType = match(true){
+            str_starts_with($mime, 'image/') => MediaType::IMAGE,
+            str_starts_with($mime, 'video/') => MediaType::VIDEO,
+            default => throw new Error('Unsupported media category')
         };
 
         /** @var string $uploadDir */
