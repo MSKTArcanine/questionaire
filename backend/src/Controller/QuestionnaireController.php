@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Choice;
 use App\Entity\Question;
 use App\Entity\Questionnaire;
+use App\Enum\QuestionType;
 use App\Repository\QuestionnaireRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -66,7 +67,7 @@ final class QuestionnaireController extends AbstractController
                 'id' => $question->getId(),
                 'title' => $question->getTitle(),
                 'description' => $question->getDescription(),
-                'type' => $question->getType(),
+                'type' => $question->getType()->value ?? QuestionType::RADIO->value,
                 'questionnaireId' => $question->getQuestionnaire()->getId(),
                 'choices' => $choices,
             ];

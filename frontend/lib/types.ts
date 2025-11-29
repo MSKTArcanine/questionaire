@@ -56,6 +56,7 @@ export interface CreateQuestionnairePayload {
     description?: string | null;
     parentChoiceId?: number | null;
     questionnaireId?: number;
+    type: QuestionType;
 }
 
 export interface PropQuestionEditor {
@@ -64,10 +65,14 @@ export interface PropQuestionEditor {
     onCancel:CallableFunction;
 }
 
+export type QuestionType = "RADIO" | "MULTIMEDIA";
+
 export type QuestionNode = {
     id: number;
     title: string;
     description?: string;
+    questionnaireId?: number;
+    type: QuestionType;
     choices: ChoiceNode[];
 };
 
@@ -80,6 +85,8 @@ export type ChoiceNode = {
 export type UpdateQuestionPayload = {
     title?: string;
     description?: string;
+    questionnaireId?:number;
+    type?: QuestionType;
 };
 
 export type CreateChoicesPayload = {

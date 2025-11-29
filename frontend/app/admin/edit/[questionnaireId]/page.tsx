@@ -72,6 +72,7 @@ export default function AdminQuestionDetailPage() {
         const saved = await updateQuestion(updatedQuestion.id, {
           title: updatedQuestion.title,
           description: updatedQuestion.description,
+          type: updatedQuestion.type,
         });
         setQuestionTree((prev) => prev ? updateQuestionInTree(prev, saved) : prev);
         setActiveQuestion(null);
@@ -89,6 +90,7 @@ export default function AdminQuestionDetailPage() {
           title: updatedQuestion.title,
           description: updatedQuestion.description,
           questionnaireId: questionnaireIdParam,
+          type: updatedQuestion.type,
         });
         setRootQuestionId(createdQuestion.id);
         const root = await getQuestionTree(createdQuestion.id);
@@ -102,6 +104,7 @@ export default function AdminQuestionDetailPage() {
         title: updatedQuestion.title,
         description: updatedQuestion.description,
         questionnaireId: questionnaireIdParam,
+        type: updatedQuestion.type,
       });
 
       await updateChoice(parentChoiceIdForNewQuestion, { //Liaison question -> réponse parent.
@@ -136,6 +139,7 @@ export default function AdminQuestionDetailPage() {
       id: -1,
       title: "",
       description: "",
+      type:"RADIO",
       choices: [],
     });
   }
@@ -205,6 +209,7 @@ export default function AdminQuestionDetailPage() {
             id: -1,
             title: "",
             description: "",
+            type: "RADIO",
             choices: [],
           });
         }}

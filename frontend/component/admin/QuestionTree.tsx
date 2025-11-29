@@ -84,7 +84,10 @@ export function QuestionTree(prop : Readonly<QuestionTreeProps>): JSX.Element {
                 {/* Titre de question */}
                 <div className="flex items-start justify-between gap-3 mb-3">
                 <div>
-                <p className="font-semibold text-base">{node.title}</p>
+                <p className="font-semibold text-base">
+                    {node.title}
+                    {node.type === "MULTIMEDIA" && (<span className="badge badge-info badge-xs ml-2"> : Multimédia</span>)}    
+                </p>
                 {node.description && (
                     <p className="text-xs text-base-content/60">{node.description}</p>
                 )}
