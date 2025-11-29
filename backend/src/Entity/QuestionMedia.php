@@ -19,7 +19,7 @@ class QuestionMedia
     private ?MediaType $type = null;
 
     #[ORM\Column(length: 255)]
-    private ?string $uri = null;
+    private ?string $mediaName = null;
 
     #[ORM\Column(enumType: AllowedMimeType::class)]
     private ?AllowedMimeType $mimeType = null;
@@ -27,25 +27,13 @@ class QuestionMedia
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $altText = null;
 
-    #[ORM\OneToOne(inversedBy: 'questionMedia', cascade: ['persist', 'remove'])]
+    #[ORM\OneToOne(inversedBy: 'questionMedia')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Question $question = null;
 
     public function getId(): ?int
     {
         return $this->id;
-    }
-
-    public function getQuestionId(): ?Question
-    {
-        return $this->question;
-    }
-
-    public function setQuestionId(?Question $question): static
-    {
-        $this->question = $question;
-
-        return $this;
     }
 
     public function getType(): ?MediaType
@@ -60,14 +48,14 @@ class QuestionMedia
         return $this;
     }
 
-    public function getUri(): ?string
+    public function getMediaName(): ?string
     {
-        return $this->uri;
+        return $this->mediaName;
     }
 
-    public function setUri(string $uri): static
+    public function setMediaName(string $mediaName): static
     {
-        $this->uri = $uri;
+        $this->mediaName = $mediaName;
 
         return $this;
     }

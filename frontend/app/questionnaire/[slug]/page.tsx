@@ -120,7 +120,7 @@ export default function FormFillPage() {
           body: formData,
         });
       }else{
-       res = await fetch(
+        res = await fetch(
         `/api/sessions/${answerSession.id}/answers`,
         {
           method: "POST",

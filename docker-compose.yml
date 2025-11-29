@@ -22,6 +22,7 @@ services:
     volumes:
     - ./backend:/app
     - ./storage/uploads/answers:/app/public/uploads/answers
+    - ./storage/uploads/questions:/app/public/uploads/questions
 
   frontend:
     build: ./frontend

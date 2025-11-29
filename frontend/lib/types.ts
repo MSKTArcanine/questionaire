@@ -20,6 +20,15 @@ export interface Choice {
     nextQuestionId : number | null;
 }
 
+export interface QuestionMedia {
+    id: number;
+    type: "IMAGE" | "VIDEO";
+    mediaName: string;
+    mimeType: "png" | "mp4";
+    altText?: string;
+    question: Question;
+}
+
 export interface QuestionWithChoices extends Question {
     choices: Choice[]
 }
@@ -75,6 +84,9 @@ export type QuestionNode = {
     questionnaireId?: number;
     type: QuestionType;
     choices: ChoiceNode[];
+    media ?: QuestionMedia |null;
+    mediaFile ?: File | null;
+
 };
 
 export type ChoiceNode = {

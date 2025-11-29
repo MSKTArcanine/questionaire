@@ -44,10 +44,7 @@ const description = descriptionValue === '' ? null : descriptionValue;
       setIsSubmitting(false);
     }
   }
-  return (
-    <div className="min-h-screen flex flex-col bg-base-200">
-      <div className="flex flex-1 overflow-hidden">
-        <main className="flex-1 flex flex-col overflow-y-auto no-scrollbar">
+  return (<>
           <div className="border-b border-base-300 bg-base-100 px-8 py-4">
             <h2 className="text-2xl font-bold text-center">
               Création du formulaire
@@ -118,8 +115,6 @@ const description = descriptionValue === '' ? null : descriptionValue;
               </div>
             </form>
           </div>
-        </main>
-      </div>
-    </div>
+          </>
   );
 }
