@@ -4,6 +4,7 @@ namespace App\Enum;
 
 enum AllowedMimeType: string
 {
-    case PNG = "png";
-    case MP4 =  "mp4";
+    case PNG = "PNG";
+    case MP4 =  "MP4";
+    case JPG = "JPG";
 }

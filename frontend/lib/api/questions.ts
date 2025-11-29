@@ -72,3 +72,34 @@ export async function deleteQuestion(id: number): Promise<void>{
         throw new Error(`Erreur HTTP ${res.status} /questions/{id} [DELETE]`);
     }
 }
+
+export async function uploadQuestionMedia(
+    questionId: number,
+    options: {
+        file: File;
+        type: "IMAGE" | "VIDEO";
+        altText?: string;
+    }
+): Promise<QuestionNode>{
+    const formData = new FormData();
+    formData.append("file", options.file);
+    formData.append("mediaType", options.type);
+    if(options.altText){
+        formData.append("altText", options.altText)
+    }
+
+    const res = await fetch(`/api/questions/${questionId}/media`, 
+        {
+            method: "POST",
+            body: formData,
+        }
+    );
+
+    if(!res.ok){
+        const txt = await res.text().catch(() => "");
+        throw new Error(`"Erreur upload media HTTP ${res.status} ${txt}`);
+    }
+
+    const body = await res.json();
+    return body.data as QuestionNode;
+}

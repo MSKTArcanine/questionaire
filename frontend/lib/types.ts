@@ -147,3 +147,12 @@ export type QuestionNodeProps = {
   file: File | null;
   onFileChange: (file: File | null) => void;
 };
+
+// export interface UploadQuestionMedia {
+//     questionId: number;
+//     option : {
+//         file: File,
+//         type: "IMAGE" | "VIDEO",
+//         altText?: string
+//     }
+// }

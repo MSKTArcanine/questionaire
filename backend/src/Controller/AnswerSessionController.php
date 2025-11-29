@@ -37,6 +37,18 @@ final class AnswerSessionController extends AbstractController
          */
         $currentQuestion = $session->getCurrentQuestion();
 
+        $mediaData = null; //Null par defaut
+        if($currentQuestion !== null && $currentQuestion->getQuestionMedia() !== null){
+            $media = $currentQuestion->getQuestionMedia();
+            $mediaData = [
+                'id' => $media->getId(),
+                'type' => $media->getType()->value,
+                'mediaName' => $media->getMediaName(),
+                'mimeType' => $media->getMimeType()->value,
+                'altText' => $media->getAltText(),
+            ];
+        }
+
         return [
             'id' => (string) $session->getId(),   // UUID de la session
             'questionnaire' => [
@@ -49,6 +61,7 @@ final class AnswerSessionController extends AbstractController
                 'title' => $currentQuestion->getTitle(),
                 'description'  => $currentQuestion->getDescription(),
                 'type' => $currentQuestion->getType()?->value ?? QuestionType::RADIO->value,
+                'media' => $mediaData,
                 'choices' => array_map(
                     static fn(Choice $choice) => [
                         'id'    => $choice->getId(),
