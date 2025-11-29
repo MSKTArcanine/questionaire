@@ -21,6 +21,7 @@ export default function FormFillPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [selectedChoiceId, setSelectedChoiceId] = useState<number | null>(null);
+  const [file, setFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState<boolean>(false);
 
   useEffect(() => {
@@ -76,20 +77,33 @@ export default function FormFillPage() {
   }, [slug]);
 
   const currentQuestion = answerSession?.current_question ?? null;
+  const isMultimedia = currentQuestion?.type === "MULTIMEDIA";
+  const canSubmit = isMultimedia ? !!file : selectedChoiceId !== null;
+  // Multimedia = need file, sinon faut un RADIO.
 
   // Reset du choix quand la question change
   useEffect(() => {
     setSelectedChoiceId(null);
+    setFile(null);
   }, [currentQuestion?.id]);
 
   const questionnaire = answerSession?.questionnaire ?? null;
   const finished = answerSession?.finished ?? false;
 
   const handleNextClick = async () => {
-    if (!answerSession || !currentQuestion || selectedChoiceId === null) {
+    if (!answerSession || !currentQuestion) {
       return;
     }
 
+    const isMultimedia = currentQuestion.type === "MULTIMEDIA";
+
+    if(isMultimedia && !file) return;
+    if(!isMultimedia && selectedChoiceId === null) return;
+
+    const choiceIdEntreLesDeux = isMultimedia ? currentQuestion.choices[0]?.id ?? null : selectedChoiceId;
+    if(!choiceIdEntreLesDeux){ //TODO: Remplacer par leur propre .tsx plus tard.
+      return;
+    }
     try {
       setSubmitting(true);
       setError(null);
@@ -101,7 +115,7 @@ export default function FormFillPage() {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ choiceId: selectedChoiceId }),
+          body: JSON.stringify({ choiceId: choiceIdEntreLesDeux }),
         }
       );
 
@@ -196,6 +210,9 @@ export default function FormFillPage() {
         submitting={submitting}
         onSelectChoice={setSelectedChoiceId}
         onNext={handleNextClick}
+        canSubmit={canSubmit}
+        file={file}
+        onFileChange={setFile}
       />
       <FormFillFooter />
     </main>

@@ -10,6 +10,7 @@ export interface Question {
     title : string;
     description : string | null;
     questionnaireId : number;
+    type: QuestionType;
 }
 
 export interface Choice {
@@ -130,4 +131,7 @@ export type QuestionNodeProps = {
   submitting: boolean;
   onSelectChoice: (id: number) => void;
   onNext: () => void;
+  canSubmit: boolean;
+  file: File | null;
+  onFileChange: (file: File | null) => void;
 };

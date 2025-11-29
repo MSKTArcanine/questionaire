@@ -7,6 +7,7 @@ use App\Entity\AnswerSession;
 use App\Entity\Choice;
 use App\Entity\Question;
 use App\Enum\AnswerSessionStatus;
+use App\Enum\QuestionType;
 use App\Repository\AnswerSessionRepository;
 use App\Repository\ChoiceRepository;
 use App\Repository\QuestionnaireRepository;
@@ -30,6 +31,9 @@ final class AnswerSessionController extends AbstractController
     private function formatSession(AnswerSession $session): array
     {
         $questionnaire   = $session->getQuestionnaire();
+        /**
+         * @var Question $currentQuestion
+         */
         $currentQuestion = $session->getCurrentQuestion();
 
         return [
@@ -43,6 +47,7 @@ final class AnswerSessionController extends AbstractController
                 'id'    => $currentQuestion->getId(),
                 'title' => $currentQuestion->getTitle(),
                 'description'  => $currentQuestion->getDescription(),
+                'type' => $currentQuestion->getType()?->value ?? QuestionType::RADIO->value,
                 'choices' => array_map(
                     static fn(Choice $choice) => [
                         'id'    => $choice->getId(),
