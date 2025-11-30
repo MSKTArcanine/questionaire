@@ -74,7 +74,7 @@ final class AnswerSessionController extends AbstractController
                 'title' => $currentQuestion->getTitle(),
                 'description'  => $currentQuestion->getDescription(),
                 'type' => $currentQuestion->getType()?->value ?? QuestionType::RADIO->value,
-                'media' => $this->mediaToJson($media),
+                'media' => $this->mediaToJson($currentQuestion->getQuestionMedia()),
                 'choices' => array_map(
                     static fn(Choice $choice) => [
                         'id'    => $choice->getId(),
