@@ -1,7 +1,7 @@
 "use client";
 
-import { FormEvent, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { FormEvent, useState } from "react";
 
 export default function LoginPage() {
     const router = useRouter();
@@ -18,7 +18,7 @@ export default function LoginPage() {
         setIsSubmitting(true);
         
         try {
-            const res = await fetch("/auth/login", {
+            const res = await fetch("/auth/user-login", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
