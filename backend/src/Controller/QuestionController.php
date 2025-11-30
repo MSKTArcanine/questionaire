@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Choice;
 use App\Entity\Question;
+use App\Enum\QuestionType;
 use App\Repository\AnswerSessionRepository;
 use App\Repository\ChoiceRepository;
 use App\Repository\QuestionnaireRepository;
@@ -13,6 +14,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
+use ValueError;
 
 #[Route('/api/questions', name: 'api_questions')]
 final class QuestionController extends AbstractController
@@ -41,6 +43,7 @@ final class QuestionController extends AbstractController
             'title' => $question->getTitle(),
             'description' => $question->getDescription(),
             'questionnaireId' => $question->getQuestionnaire()?->getId(),
+            'type' => $question->getType()?->value ?? QuestionType::RADIO->value,
         ];
     }
     private function questionToNode(Question $question): array
@@ -50,6 +53,7 @@ final class QuestionController extends AbstractController
         'title' => $question->getTitle(),
         'description' => $question->getDescription(),
         'questionnaireId' => $question->getQuestionnaire()?->getId(),
+        'type' => $question->getType()?->value ?? QuestionType::RADIO->value,
         'choices' => array_map(
             function (Choice $choice) {
                 return [
@@ -89,12 +93,20 @@ final class QuestionController extends AbstractController
         $title = $body['title'] ?? null;
         $description = $body['description'] ?? null;
         $questionnaireId = $body['questionnaireId'] ?? null;
+        $type = $body['type'] ?? QuestionType::RADIO->value;
 
         if(!$title || !$questionnaireId){
             return $this->json(['error' => 'Invalid form'], 405);
         }
 
+        try {
+            $type = QuestionType::from($type);
+        }catch(ValueError $e){
+            return $this->json(['error' => 'Invalid question type'], 400);
+        }
+
         $questionnaire = $this->questionnaireRepository->find($questionnaireId);
+
         if(!$questionnaire){
             return $this->json(['error' => 'Questionnaire not found'], 405);
         }
@@ -104,6 +116,7 @@ final class QuestionController extends AbstractController
         $question->setDescription($description);
         $questionnaire->addQuestion($question);
         $question->setQuestionnaire($questionnaire);
+        $question->setType($type);
 
         if($questionnaire->getRootQuestion() === null){ //Ajout de la question root.
             $question->setIsRoot(true); //On met le flag
@@ -121,6 +134,9 @@ final class QuestionController extends AbstractController
 
     #[Route(path: self::QUESTION_ID_PATH, name: 'put_question', methods: ['PUT'])]
     public function putQuestion(int $id, Request $request): JsonResponse{
+        /**
+         * @var Question $question
+         */
         $question = $this->questionRepository->find($id);
         if(!$question){
             return $this->json(['error' => self::QUESTION_NOT_FOUND], 404);
@@ -138,6 +154,14 @@ final class QuestionController extends AbstractController
                 return $this->json(['error' => 'Invalide questionnaire'], 405);
             }
             $questionnaire->addQuestion($question);
+        }
+
+        if(array_key_exists('type', $body)){
+            try {
+                $question->setType(QuestionType::from($body['type']));
+            }catch(ValueError $e){
+                return $this->json(['error' => 'Invalid question type'], 400);
+            }
         }
         $this->entityManager->flush();
         $data = $this->questionToData($question);

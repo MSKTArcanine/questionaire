@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Choice;
 use App\Entity\Question;
 use App\Entity\Questionnaire;
+use App\Enum\QuestionType;
 use App\Repository\QuestionnaireRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -19,6 +20,45 @@ final class QuestionnaireController extends AbstractController
         private readonly QuestionnaireRepository $questionnaireRepository
     )
     {}
+
+    private function questionToData(Question $question): array
+    {
+        // Choices
+        $choices = [];
+        foreach ($question->getChoices() as $choice) {
+            /** @var Choice $choice */
+            $choices[] = [
+                'id' => $choice->getId(),
+                'content' => $choice->getContent(),
+                'nextQuestionId' => $choice->getNextQuestion()?->getId(),
+                'questionId' => $choice->getQuestion()->getId(),
+            ];
+        }
+
+        // Media
+        $media = $question->getQuestionMedia();
+        $mediaData = null;
+
+        if ($media !== null) {
+            $mediaData = [
+                'id' => $media->getId(),
+                'type' => $media->getType()->value,
+                'mediaName' => $media->getMediaName(),
+                'mimeType' => $media->getMimeType()->value,
+                'altText' => $media->getAltText(),
+            ];
+        }
+
+        return [
+            'id' => $question->getId(),
+            'title' => $question->getTitle(),
+            'description' => $question->getDescription(),
+            'type' => $question->getType()?->value ?? QuestionType::RADIO->value,
+            'questionnaireId' => $question->getQuestionnaire()->getId(),
+            'media' => $mediaData,
+            'choices' => $choices,
+        ];
+    }
     #[Route('', name: 'list_questionnaire', methods:['GET'])]
     public function list(): JsonResponse
     {
@@ -49,26 +89,7 @@ final class QuestionnaireController extends AbstractController
          * @var Question $question
          */
         foreach ($questionnaire->getQuestions() as $question) {
-            $choices = [];
-            /**
-             * @var Choice $choice
-             */
-            foreach ($question->getChoices() as $choice){
-                $choices[] = [
-                    'id' => $choice->getId(),
-                    'content' => $choice->getContent(),
-                    'nextQuestionId' => $choice->getNextQuestion()?->getId(),
-                    'questionId' => $choice->getQuestion()->getId(),
-                ];
-            }
-
-            $questions[] = [
-                'id' => $question->getId(),
-                'title' => $question->getTitle(),
-                'description' => $question->getDescription(),
-                'questionnaireId' => $question->getQuestionnaire()->getId(),
-                'choices' => $choices,
-            ];
+            $questions[] = $this->questionToData($question);
         }
 
         $data = [

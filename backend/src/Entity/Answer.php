@@ -25,6 +25,15 @@ class Answer
     #[ORM\JoinColumn(nullable: false)]
     private ?Question $question = null;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $mediaPath = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $mediaName = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $mediaMimeType = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -62,6 +71,42 @@ class Answer
     public function setChoice(?Choice $choice): static
     {
         $this->choice = $choice;
+
+        return $this;
+    }
+
+    public function getMediaPath(): ?string
+    {
+        return $this->mediaPath;
+    }
+
+    public function setMediaPath(?string $mediaPath): static
+    {
+        $this->mediaPath = $mediaPath;
+
+        return $this;
+    }
+
+    public function getMediaName(): ?string
+    {
+        return $this->mediaName;
+    }
+
+    public function setMediaName(?string $mediaName): static
+    {
+        $this->mediaName = $mediaName;
+
+        return $this;
+    }
+
+    public function getMediaMimeType(): ?string
+    {
+        return $this->mediaMimeType;
+    }
+
+    public function setMediaMimeType(?string $mediaMimeType): static
+    {
+        $this->mediaMimeType = $mediaMimeType;
 
         return $this;
     }

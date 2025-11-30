@@ -3,14 +3,14 @@ import type { ReactNode } from "react";
 
 export default function AdminLayout({ children }: { readonly children: ReactNode }) {
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-base-200">
+    <div className="min-h-screen flex flex-col bg-base-200">
       <header className="navbar bg-base-100 border-b border-base-300 px-6 shrink-0">
         <div className="flex-1">
           <span className="text-lg font-semibold">Outils administratifs</span>
         </div>
       </header>
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1">
         <aside className="w-64 bg-base-100 border-r border-base-300 p-4 flex flex-col gap-3 shrink-0">
           <div className="border border-base-300 rounded-lg py-3 text-center font-semibold">
             Actions
@@ -35,7 +35,7 @@ export default function AdminLayout({ children }: { readonly children: ReactNode
           </button>
         </aside>
 
-        <main className="flex-1 flex flex-col overflow-hidden">
+        <main className="flex-1 flex flex-col">
           {children}
         </main>
       </div>

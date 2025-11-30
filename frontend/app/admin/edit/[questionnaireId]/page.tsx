@@ -4,7 +4,7 @@ import QuestionEditor from "@/component/admin/QuestionEditor";
 import { QuestionTree } from "@/component/admin/QuestionTree";
 import { createChoice, deleteChoice, updateChoice } from "@/lib/api/choices";
 import { getQuestionnaire } from "@/lib/api/questionnaires";
-import { createQuestion, deleteQuestion, getQuestionTree, updateQuestion } from "@/lib/api/questions";
+import { createQuestion, deleteQuestion, getQuestionTree, updateQuestion, uploadQuestionMedia } from "@/lib/api/questions";
 import { QuestionNode } from "@/lib/types";
 import updateQuestionInTree from "@/lib/utils/updateQuestionInTree";
 import { useParams } from "next/navigation";
@@ -66,56 +66,72 @@ export default function AdminQuestionDetailPage() {
     }
   }
   
-  async function handleSaveQuestion(updatedQuestion: QuestionNode) {
+  async function handleSaveQuestion(updatedQuestion: QuestionNode & {
+    mediaFile?: File | null
+  }) {
+
     try {
+
+    let savedQuestion: QuestionNode | null = null;
+
+      //Update
       if (updatedQuestion.id !== -1) {
-        const saved = await updateQuestion(updatedQuestion.id, {
+        savedQuestion = await updateQuestion(updatedQuestion.id, {
           title: updatedQuestion.title,
           description: updatedQuestion.description,
+          type: updatedQuestion.type,
         });
-        setQuestionTree((prev) => prev ? updateQuestionInTree(prev, saved) : prev);
-        setActiveQuestion(null);
-        return;
-      }
 
+        // Upload du média si existant
+        if(updatedQuestion.mediaFile){
+          await uploadQuestionMedia(savedQuestion.id, {
+            file: updatedQuestion.mediaFile,
+            type: updatedQuestion.media?.type ?? "IMAGE",
+            altText: updatedQuestion.media?.altText,
+          });
+        }
+          await reloadTree();
+          setActiveQuestion(null);
+          setParentChoiceIdForNewQuestion(null);
+          return;
+      }
+      //Creation nouvelle question
       if(questionnaireIdParam == null){
         console.error("Pas de questionnaire");
         setActiveQuestion(null);
         return;
       }
-
-      if(parentChoiceIdForNewQuestion == null){ //Pas de parent = root.
         const createdQuestion = await createQuestion({
           title: updatedQuestion.title,
           description: updatedQuestion.description,
           questionnaireId: questionnaireIdParam,
+          type: updatedQuestion.type,
         });
-        setRootQuestionId(createdQuestion.id);
-        const root = await getQuestionTree(createdQuestion.id);
-        setQuestionTree(root);
+
+        savedQuestion = createdQuestion;
+
+        if(parentChoiceIdForNewQuestion == null){
+          setRootQuestionId(createdQuestion.id);
+        }else{
+          await updateChoice(parentChoiceIdForNewQuestion, {nextQuestionId:createdQuestion.id});
+        }
+
+        //upload media
+        if(updatedQuestion.mediaFile){
+          await uploadQuestionMedia(createdQuestion.id, {
+            file: updatedQuestion.mediaFile,
+            type: updatedQuestion.media?.type ?? "IMAGE",
+            altText: updatedQuestion.media?.altText,
+          });
+        }
+
+        await reloadTree();
         setActiveQuestion(null);
         setParentChoiceIdForNewQuestion(null);
         return;
+      }catch(e){
+        console.error("Erreur sauvegarde : ", e);
       }
-
-      const createdQuestion = await createQuestion({
-        title: updatedQuestion.title,
-        description: updatedQuestion.description,
-        questionnaireId: questionnaireIdParam,
-      });
-
-      await updateChoice(parentChoiceIdForNewQuestion, { //Liaison question -> réponse parent.
-        nextQuestionId: createdQuestion.id,
-      });
-
-      await reloadTree();
-
-      setActiveQuestion(null);
-      setParentChoiceIdForNewQuestion(null);
-
-    } catch (error) {
-      console.error("Erreur sauvegarde question :", error);
-    }
   }
   
   async function handleUpdateChoice(choiceId: number, content: string) {
@@ -136,6 +152,7 @@ export default function AdminQuestionDetailPage() {
       id: -1,
       title: "",
       description: "",
+      type:"RADIO",
       choices: [],
     });
   }
@@ -205,6 +222,7 @@ export default function AdminQuestionDetailPage() {
             id: -1,
             title: "",
             description: "",
+            type: "RADIO",
             choices: [],
           });
         }}

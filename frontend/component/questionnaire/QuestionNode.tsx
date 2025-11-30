@@ -1,4 +1,6 @@
 import { QuestionNodeProps } from "@/lib/types";
+import { mdxCompile } from "next/dist/build/swc/generated-native";
+import Image from "next/image";
 
 export default function QuestionNode({
   question,
@@ -7,7 +9,14 @@ export default function QuestionNode({
   submitting,
   onSelectChoice,
   onNext,
+  canSubmit,
+  file,
+  onFileChange,
 }: Readonly<QuestionNodeProps>) {
+
+  const isMultimedia = question.type === "MULTIMEDIA";
+  const media = question.media ?? null;
+
   return (
     <section className="flex-1 flex flex-row gap-4 px-8 py-8">
       {/* Colonne centrale */}
@@ -20,6 +29,27 @@ export default function QuestionNode({
           )}
         </div>
 
+        {media && (
+          <div className="mb-6 flex justify-center">
+            {media.type === "IMAGE" ? (
+              <Image
+                src={media.streamUrl}
+                alt={media.altText ?? ""}
+                width={300}
+                height={300}
+                unoptimized
+                className="max-h-64 rounded-xl shadow-md object-contain"
+                />
+            ):(
+              <video
+                src={media.streamUrl}
+                controls
+                className="max-h-64 rounded-xl shadow-md"
+                />
+            )}
+            </div>
+        )}
+
         {/* Message d'erreur */}
         {error && (
           <p className="mb-4 text-error text-sm text-center">{error}</p>
@@ -27,8 +57,28 @@ export default function QuestionNode({
 
         {/* Carte choices */}
         <div className="flex-1 flex items-center justify-center">
-          <div className="w-full max-w-3xl border border-base-300 rounded-xl p-6">
-            <form className="flex flex-col gap-3">
+          <div className="w-full max-w-3xl border border-base-300 rounded-xl p-6">{
+            isMultimedia ? (
+    <div className="flex flex-col gap-4">
+      <p className="text-sm text-base-content/70">
+        Importez votre image ou vidéo (formats supportés : PNG, MP4…).
+      </p>
+      <input
+        type="file"
+        className="file-input file-input-bordered w-full"
+        accept="image/*,video/*"
+        onChange={(e) =>
+          onFileChange(e.target.files?.[0] ?? null)
+        }
+        disabled={submitting}
+      />
+      {file && (
+        <p className="text-xs text-base-content/60">
+          Fichier sélectionné : <span className="font-semibold">{file.name}</span>
+        </p>
+      )}
+    </div>
+            ):(<form className="flex flex-col gap-3">
               {question.choices.map((choice) => (
                 <label
                   key={choice.id}
@@ -47,7 +97,7 @@ export default function QuestionNode({
                   </span>
                 </label>
               ))}
-            </form>
+            </form>)}
           </div>
         </div>
       </div>
@@ -59,7 +109,7 @@ export default function QuestionNode({
             type="button"
             className="btn btn-primary btn-block max-w-[120px]"
             onClick={onNext}
-            disabled={selectedChoiceId === null || submitting}
+            disabled={!canSubmit || submitting}
           >
             {submitting ? (
               <>

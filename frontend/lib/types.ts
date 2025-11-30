@@ -10,6 +10,7 @@ export interface Question {
     title : string;
     description : string | null;
     questionnaireId : number;
+    type: QuestionType;
 }
 
 export interface Choice {
@@ -19,8 +20,19 @@ export interface Choice {
     nextQuestionId : number | null;
 }
 
+export interface QuestionMedia {
+    id: number;
+    type: "IMAGE" | "VIDEO";
+    mediaName: string;
+    mimeType: "png" | "mp4";
+    altText?: string;
+    question: Question;
+    streamUrl: string;
+}
+
 export interface QuestionWithChoices extends Question {
     choices: Choice[]
+    media?: QuestionMedia | null;
 }
 
 export interface QuestionnaireWithQuestions extends Questionnaire {
@@ -56,6 +68,7 @@ export interface CreateQuestionnairePayload {
     description?: string | null;
     parentChoiceId?: number | null;
     questionnaireId?: number;
+    type: QuestionType;
 }
 
 export interface PropQuestionEditor {
@@ -64,11 +77,18 @@ export interface PropQuestionEditor {
     onCancel:CallableFunction;
 }
 
+export type QuestionType = "RADIO" | "MULTIMEDIA";
+
 export type QuestionNode = {
     id: number;
     title: string;
     description?: string;
+    questionnaireId?: number;
+    type: QuestionType;
     choices: ChoiceNode[];
+    media ?: QuestionMedia |null;
+    mediaFile ?: File | null;
+
 };
 
 export type ChoiceNode = {
@@ -80,6 +100,8 @@ export type ChoiceNode = {
 export type UpdateQuestionPayload = {
     title?: string;
     description?: string;
+    questionnaireId?:number;
+    type?: QuestionType;
 };
 
 export type CreateChoicesPayload = {
@@ -123,4 +145,8 @@ export type QuestionNodeProps = {
   submitting: boolean;
   onSelectChoice: (id: number) => void;
   onNext: () => void;
+  canSubmit: boolean;
+  file: File | null;
+  onFileChange: (file: File | null) => void;
 };
+
