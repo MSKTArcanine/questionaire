@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const BACKEND_URL =
-process.env.BACKEND_URL ?? "https://questionaire.localhost";
+process.env.BACKEND_URL ?? "http://backend:8000";
 
 export async function POST(req: NextRequest) {
     const { email, password } = await req.json();
