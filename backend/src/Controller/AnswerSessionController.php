@@ -6,6 +6,7 @@ use App\Entity\Answer;
 use App\Entity\AnswerSession;
 use App\Entity\Choice;
 use App\Entity\Question;
+use App\Entity\QuestionMedia;
 use App\Enum\AnswerSessionStatus;
 use App\Enum\QuestionType;
 use App\Repository\AnswerSessionRepository;
@@ -18,6 +19,7 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 #[Route('/api/sessions', name: 'api_choices_')]
 final class AnswerSessionController extends AbstractController
@@ -29,6 +31,26 @@ final class AnswerSessionController extends AbstractController
         private readonly ChoiceRepository $choiceRepository,
     ) {}
 
+    private function mediaToJson(?QuestionMedia $media): ?array
+    {
+        if (!$media) {
+            return null;
+        }
+
+        return [
+            'id'        => $media->getId(),
+            'type'      => $media->getType()->value,
+            'mediaName' => $media->getMediaName(),
+            'mimeType'  => $media->getMimeType()->value,
+            'altText'   => $media->getAltText(),
+            'streamUrl' => $this->generateUrl(
+                'api_questionsstream_media',              // <- name = "api_media_" + "stream"
+                ['id' => $media->getId()],
+                UrlGeneratorInterface::ABSOLUTE_URL
+            ),
+        ];
+    }
+
     private function formatSession(AnswerSession $session): array
     {
         $questionnaire   = $session->getQuestionnaire();
@@ -36,17 +58,8 @@ final class AnswerSessionController extends AbstractController
          * @var Question $currentQuestion
          */
         $currentQuestion = $session->getCurrentQuestion();
-
-        $mediaData = null; //Null par defaut
         if($currentQuestion !== null && $currentQuestion->getQuestionMedia() !== null){
             $media = $currentQuestion->getQuestionMedia();
-            $mediaData = [
-                'id' => $media->getId(),
-                'type' => $media->getType()->value,
-                'mediaName' => $media->getMediaName(),
-                'mimeType' => $media->getMimeType()->value,
-                'altText' => $media->getAltText(),
-            ];
         }
 
         return [
@@ -61,7 +74,7 @@ final class AnswerSessionController extends AbstractController
                 'title' => $currentQuestion->getTitle(),
                 'description'  => $currentQuestion->getDescription(),
                 'type' => $currentQuestion->getType()?->value ?? QuestionType::RADIO->value,
-                'media' => $mediaData,
+                'media' => $this->mediaToJson($media),
                 'choices' => array_map(
                     static fn(Choice $choice) => [
                         'id'    => $choice->getId(),

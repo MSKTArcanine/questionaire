@@ -27,10 +27,12 @@ export interface QuestionMedia {
     mimeType: "png" | "mp4";
     altText?: string;
     question: Question;
+    streamUrl: string;
 }
 
 export interface QuestionWithChoices extends Question {
     choices: Choice[]
+    media?: QuestionMedia | null;
 }
 
 export interface QuestionnaireWithQuestions extends Questionnaire {
@@ -148,11 +150,3 @@ export type QuestionNodeProps = {
   onFileChange: (file: File | null) => void;
 };
 
-// export interface UploadQuestionMedia {
-//     questionId: number;
-//     option : {
-//         file: File,
-//         type: "IMAGE" | "VIDEO",
-//         altText?: string
-//     }
-// }

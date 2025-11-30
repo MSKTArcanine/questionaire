@@ -1,4 +1,6 @@
 import { QuestionNodeProps } from "@/lib/types";
+import { mdxCompile } from "next/dist/build/swc/generated-native";
+import Image from "next/image";
 
 export default function QuestionNode({
   question,
@@ -13,6 +15,7 @@ export default function QuestionNode({
 }: Readonly<QuestionNodeProps>) {
 
   const isMultimedia = question.type === "MULTIMEDIA";
+  const media = question.media ?? null;
 
   return (
     <section className="flex-1 flex flex-row gap-4 px-8 py-8">
@@ -25,6 +28,27 @@ export default function QuestionNode({
             <p className="text-base-content/70">{question.description}</p>
           )}
         </div>
+
+        {media && (
+          <div className="mb-6 flex justify-center">
+            {media.type === "IMAGE" ? (
+              <Image
+                src={media.streamUrl}
+                alt={media.altText ?? ""}
+                width={300}
+                height={300}
+                unoptimized
+                className="max-h-64 rounded-xl shadow-md object-contain"
+                />
+            ):(
+              <video
+                src={media.streamUrl}
+                controls
+                className="max-h-64 rounded-xl shadow-md"
+                />
+            )}
+            </div>
+        )}
 
         {/* Message d'erreur */}
         {error && (

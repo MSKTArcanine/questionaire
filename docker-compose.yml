@@ -36,6 +36,7 @@ services:
       - ./frontend:/app
   
   caddy:
+    hostname: questionaire.localhost
     image: caddy:latest
     depends_on:
       - backend
