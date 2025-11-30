@@ -7,6 +7,7 @@ use App\Entity\AnswerSession;
 use App\Entity\Choice;
 use App\Entity\Question;
 use App\Entity\QuestionMedia;
+use App\Entity\Questionnaire;
 use App\Entity\User;
 use App\Enum\AnswerSessionStatus;
 use App\Enum\QuestionType;
@@ -91,7 +92,7 @@ final class AnswerSessionController extends AbstractController
         //ON CHOPPE L USER DU COUP JWT
 
         /**
-         * @var User $user;
+         * @var User|null $user;
          */
         $user = $this->getUser();
         if($user === null){
@@ -111,6 +112,12 @@ final class AnswerSessionController extends AbstractController
         if(!$questionnaire){
             return $this->json(['error' => 'Questionnaire not found'], 404);
         }
+
+        //Donc là, on fait BIEN gaffe à récup la DERNIERE session.
+        $existingSession = $this->answerSessionRepository->findLatestIncompleteByQuestionnaireAndEmail($questionnaire, $email);
+        if($existingSession !== null){
+            return $this->json(['data' => $this->formatSession($existingSession)], 200);
+        }//Si y en a pas, on fait comme si de rien était.
 
         $rootQuestion = $questionnaire->getRootQuestion();
         if(!$rootQuestion){
