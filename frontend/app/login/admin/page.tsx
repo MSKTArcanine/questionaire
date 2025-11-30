@@ -117,8 +117,7 @@ export default function LoginPage() {
     </div>
     
     <p className="mt-4 text-center text-xs opacity-70">
-    Les visiteurs peuvent répondre aux questionnaires sans compte.  
-    Cette page est réservée à l’administration. (TODO: RETIRER APRES.)
+      Admin : Email + password.
     </p>
     </div>
     </div>

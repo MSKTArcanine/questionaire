@@ -37,7 +37,7 @@ const description = descriptionValue === '' ? null : descriptionValue;
     try {
       await createQuestionnaire(payload);
       setSuccess(true);
-      router.push('/admin/search'); //TODO: Vers la page des détails.
+      router.push('/admin/search');
     }catch(err){
       setError(err instanceof Error ? err.message : 'Erreur inconnue');
     }finally{

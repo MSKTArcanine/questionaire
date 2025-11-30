@@ -7,6 +7,7 @@ use App\Entity\AnswerSession;
 use App\Entity\Choice;
 use App\Entity\Question;
 use App\Entity\QuestionMedia;
+use App\Entity\User;
 use App\Enum\AnswerSessionStatus;
 use App\Enum\QuestionType;
 use App\Repository\AnswerSessionRepository;
@@ -86,6 +87,19 @@ final class AnswerSessionController extends AbstractController
     #[Route(path: '', name: 'postAS', methods: ['POST'])]
     public function crateAnswerSession(Request $request): JsonResponse
     {
+
+        //ON CHOPPE L USER DU COUP JWT
+
+        /**
+         * @var User $user;
+         */
+        $user = $this->getUser();
+        if($user === null){
+            return $this->json(['error' => 'Unauthorized'], 401);
+        }
+        $email = $user->getUserIdentifier();
+        //.
+
         $body = json_decode($request->getContent(), true);
         $publicId = $body['slug'] ?? null;
         
@@ -106,6 +120,9 @@ final class AnswerSessionController extends AbstractController
         $answerSession = new AnswerSession();
         $answerSession->setQuestionnaire($questionnaire);
         $answerSession->setCurrentQuestion($rootQuestion);
+        //On balance le mail via l'user:
+        $answerSession->setEmail($email);
+        //bam
         $this->entityManager->persist($answerSession);
         $this->entityManager->flush();
 

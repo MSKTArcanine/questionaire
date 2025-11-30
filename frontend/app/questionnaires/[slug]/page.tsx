@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { AnswerSessionApiResponse } from "@/lib/types";
 import FormFillHeader from "@/component/questionnaire/FormFillHeader";
 import FormFillFooter from "@/component/questionnaire/FormFillFooter";
@@ -13,6 +13,7 @@ type AnswerSession = AnswerSessionApiResponse["data"];
 export default function FormFillPage() {
   const params = useParams<{ slug: string }>();
   const slug = params.slug;
+  const router = useRouter();
 
   const [answerSession, setAnswerSession] = useState<AnswerSession | null>(
     null
@@ -42,6 +43,11 @@ export default function FormFillPage() {
           body: JSON.stringify({ slug }),
         });
 
+        if(res.status === 401) { //JWT inexistant => On login.
+          const target = `/questionnaires/${slug}`;
+          router.push(`/login/user?redirect=${encodeURIComponent(target)}`);
+          return;
+        }
         if (!res.ok) {
           const text = await res.text().catch(() => "");
           console.error(

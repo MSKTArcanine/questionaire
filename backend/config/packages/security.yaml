@@ -31,10 +31,9 @@ security:
 
     access_control:
         - { path: ^/api/auth/login, roles: PUBLIC_ACCESS }
-
-        - { path: ^/api/sessions, roles: PUBLIC_ACCESS }
+        - { path: ^/api/auth/user, roles: PUBLIC_ACCESS }
         - { path: ^/api/questionnaires, roles: PUBLIC_ACCESS }
 
-        - { path: ^/api/admin, roles: ROLE_ADMIN }
+        - { path: ^api/sessions, roles: ROLE_USER }
 
-        - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api, roles: ROLE_ADMIN }

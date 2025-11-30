@@ -2,6 +2,7 @@
 
 import { getQuestionnaires } from '@/lib/api/questionnaires';
 import useSWR from 'swr'; //On evite le useeffect kipu
+import { Questionnaire } from '../types';
 
 export function useQuestionnaires() {
   const {

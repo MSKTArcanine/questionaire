@@ -3,6 +3,7 @@ export interface Questionnaire {
     title : string;
     description : string | null;
     rootQuestionId : number | null;
+    slug: string;
 }
 
 export interface Question {
@@ -61,6 +62,13 @@ export interface PropListSearch {
     title: string;
     description: string | null;
     onDelete: (id: number) => void;
+}
+
+export interface PropUserListSearch {
+    id: number;
+    title: string;
+    description: string | null;
+    slug: string;
 }
 
 export interface CreateQuestionnairePayload {

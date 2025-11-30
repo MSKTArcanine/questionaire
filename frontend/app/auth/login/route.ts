@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
     // JWT en cookie HTTP-only
     const res = NextResponse.json({ ok: true }, { status: 200 });
     
-    res.cookies.set("admin_jwt", token, {
+    res.cookies.set("jwt", token, {
         httpOnly: true,
         secure: true,
         sameSite: "lax",
