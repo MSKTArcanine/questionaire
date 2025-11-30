@@ -1,5 +1,7 @@
 <?php
 
+//TODO: FAUT REFAIRE LA GIGA FONCTIONS AVEC 17 CONDITIONS.
+
 namespace App\Controller;
 
 use App\Entity\Answer;
@@ -146,8 +148,6 @@ final class AnswerSessionController extends AbstractController
          * @var UploadedFile|null $uploadedFile
          */
         $uploadedFile = null;
-        $body = json_decode($request->getContent(), true);
-
 
         if (str_starts_with($contentType, 'application/json')) {
             $body = json_decode($request->getContent(), true) ?? [];

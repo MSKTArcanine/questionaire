@@ -101,7 +101,7 @@ export default function LoginPage() {
         autoComplete="current-password"
         value={password}
         onChange={(e) => {
-            const digitOnly = e.target.value.replace(/\D/g, "").slice(0,4);
+            const digitOnly = e.target.value.replaceAll(/\D/g, "").slice(0,4);
             setPassword(digitOnly);
         }}
         required
