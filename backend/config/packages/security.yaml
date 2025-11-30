@@ -37,4 +37,6 @@ security:
         - { path: ^/api/sessions, roles: IS_AUTHENTICATED_FULLY }
         - { path: ^/api/questions, roles: IS_AUTHENTICATED_FULLY }
 
+        # Tout tombe sous admin sinon.
+
         - { path: ^/api, roles: ROLE_ADMIN }
