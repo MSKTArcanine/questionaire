@@ -35,5 +35,6 @@ security:
         - { path: ^/api/questionnaires, roles: PUBLIC_ACCESS }
 
         - { path: ^/api/sessions, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/questions, roles: IS_AUTHENTICATED_FULLY }
 
         - { path: ^/api, roles: ROLE_ADMIN }
