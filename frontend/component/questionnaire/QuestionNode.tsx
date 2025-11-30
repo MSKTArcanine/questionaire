@@ -1,5 +1,4 @@
 import { QuestionNodeProps } from "@/lib/types";
-import { mdxCompile } from "next/dist/build/swc/generated-native";
 import Image from "next/image";
 
 export default function QuestionNode({

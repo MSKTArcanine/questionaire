@@ -6,7 +6,6 @@ import { createChoice, deleteChoice, updateChoice } from "@/lib/api/choices";
 import { getQuestionnaire } from "@/lib/api/questionnaires";
 import { createQuestion, deleteQuestion, getQuestionTree, updateQuestion, uploadQuestionMedia } from "@/lib/api/questions";
 import { QuestionNode } from "@/lib/types";
-import updateQuestionInTree from "@/lib/utils/updateQuestionInTree";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -20,14 +19,12 @@ export default function AdminQuestionDetailPage() {
   );
   const [parentChoiceIdForNewQuestion, setParentChoiceIdForNewQuestion] = useState<number | null>(null);
   const [questionTree, setQuestionTree] = useState<QuestionNode | null>(null);
-  const [rootQuestionId, setRootQuestionId] = useState<number | null>(null);
   const [questionnaireTitle, setQuestionnaireTitle] = useState<string>("");
   
   async function reloadTree(currentRootId?: number | null) {
     try {
       const questionnaire = await getQuestionnaire(questionnaireIdParam);
       setQuestionnaireTitle(questionnaire.title);
-      setRootQuestionId(questionnaire.rootQuestionId);
 
       if(!questionnaire.rootQuestionId){
         setQuestionTree(null);
@@ -108,11 +105,7 @@ export default function AdminQuestionDetailPage() {
           type: updatedQuestion.type,
         });
 
-        savedQuestion = createdQuestion;
-
-        if(parentChoiceIdForNewQuestion == null){
-          setRootQuestionId(createdQuestion.id);
-        }else{
+        if(parentChoiceIdForNewQuestion !== null){
           await updateChoice(parentChoiceIdForNewQuestion, {nextQuestionId:createdQuestion.id});
         }
 

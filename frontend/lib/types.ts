@@ -68,7 +68,7 @@ export interface CreateQuestionnairePayload {
     description?: string | null;
     parentChoiceId?: number | null;
     questionnaireId?: number;
-    type: QuestionType;
+    type?: QuestionType;
 }
 
 export interface PropQuestionEditor {
@@ -113,13 +113,13 @@ export type CreateChoicesPayload = {
 export type UpdateChoicePayload = {
     questionId: number;
     content: string;
-    nextQuestionId?: number | null;
+    nextQuestionId: number | null;
 };
 
 export interface QuestionTreeProps {
     root: QuestionNode;
     onEditQuestion: (question: QuestionNode) => void;
-    onDeleteQuestion: (questionId: number) => void;
+    onDeleteQuestion: (questionId: number) => Promise<void>;
     onAddQuestionToChoice: (choiceId: number) => void;
 
     onCreateChoice: (questionId: number, content: string) => void | Promise<void>;

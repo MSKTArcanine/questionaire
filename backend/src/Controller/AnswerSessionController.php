@@ -58,10 +58,6 @@ final class AnswerSessionController extends AbstractController
          * @var Question $currentQuestion
          */
         $currentQuestion = $session->getCurrentQuestion();
-        if($currentQuestion !== null && $currentQuestion->getQuestionMedia() !== null){
-            $media = $currentQuestion->getQuestionMedia();
-        }
-
         return [
             'id' => (string) $session->getId(),   // UUID de la session
             'questionnaire' => [
