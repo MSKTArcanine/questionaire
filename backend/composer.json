@@ -65,7 +65,12 @@
         ],
         "post-update-cmd": [
             "@auto-scripts"
+        ],
+        "lint": [
+            "php bin/console lint:yaml config --parse-tags",
+            "php bin/console lint:container"
         ]
+        
     },
     "conflict": {
         "symfony/symfony": "*"
