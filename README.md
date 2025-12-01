@@ -102,4 +102,42 @@ make reset-db
 ✅ Tous les tests doivent être verts.
 Si un test échoue, vérifiez d’abord la configuration (.env, base de données, clés JWT, ports, etc.).
 
-### test
+## Modélisation de l'arbre :
+
+- Modélisation faites en DB par l'ajout de questions ROOT aux questionnaires, puis l'ajout de choix pouvant ensuite donner suite à une autre question, perpétuant la branche vers une autre Node.
+- La fin se déclenche au moment où une node réponse "feuille" est atteinte, sans aucune question par la suite.
+
+## Choix d'architecture :
+
+Architecture en plusieurs services Docker, orchestrés via compose.yml :
+- Caddy : faisant acte de reverse proxy, exposant le projet en HTTP/HTTPS via les routes /api pour Symfony, et le reste pour Next.js
+- Backend : Symfony (API REST)
+- Frontend : Next.js (Interface Web)
+- Base de données : PostgreSQL
+
+Architecture backend en monolithe Symfony exposant une API REST :
+- Entités Doctrines, Migrations pour versionner le schém, Fixtures pour préremplir les tests
+- Controlleurs API : Endpoints admin et utilisateur
+
+Modélisation de l'arbre :
+- Un questionnaire possède plusieurs questions, qui elles mêmes possèdent plusieurs choix.
+- Ces choix peuvent pointer vers la question suivante, ou rien terminant le questionnaire
+- Une AnswerSession garde l'état du parcours en gérant la réponse en cours et les réponses données.
+
+Sécurité :
+- Authentification avec autorisation via JWT
+- Enpoints protégés par ROLE.
+
+Architecture Frontend :
+- Next.js utilisant les réponses de l'API
+- Scindage entre la partie répondante et la partie admin
+
+
+## Migrations & Fixtures :
+- Utilisation de Doctrine pour générer les Entités ainsi que les migrations via le dossier migrations/
+- Commande Makefile : make reset-db, permettant la migrations et la mise en place des fixtures afin de repeupler la DB.
+
+## Tests unitaires, tests d'intégrations :
+- Compilation des deux types dans leur controller respectifs.
+- Gérant à la fois la couche Repository et la couche HTTP/JWT.
+- Commande Makefile : make test-api, permettant une cinquantaine de test, s'assurant l'intégrité du backend.
