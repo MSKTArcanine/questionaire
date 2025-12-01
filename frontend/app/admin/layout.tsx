@@ -13,6 +13,8 @@ export default function AdminLayout({ children }: { readonly children: ReactNode
 
       <div className="flex flex-1">
         <aside className="w-64 bg-base-100 border-r border-base-300 p-4 flex flex-col gap-3 shrink-0">
+          
+          <AdminLogoutButton/>
           <div className="border border-base-300 rounded-lg py-3 text-center font-semibold">
             Actions
           </div>
@@ -22,7 +24,6 @@ export default function AdminLayout({ children }: { readonly children: ReactNode
           <button className="btn btn-sm mt-auto justify-start border-base-300 bg-base-100">
             Autre outil
           </button>
-          <AdminLogoutButton/>
         </aside>
 
         <main className="flex-1 flex flex-col">
