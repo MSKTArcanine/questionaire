@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
-const BACKEND_URL = process.env.BACKEND_URL ?? "http://backend:8000";
+const BACKEND_URL = process.env.BACKEND_URL;
 
 export async function middleware(req: NextRequest) {
   const { pathname, search } = req.nextUrl;

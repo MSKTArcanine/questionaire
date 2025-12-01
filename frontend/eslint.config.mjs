@@ -1,18 +1,31 @@
-import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
+import sonarjs from "eslint-plugin-sonarjs";
+import { defineConfig, globalIgnores } from "eslint/config";
 
-const eslintConfig = defineConfig([
+export default defineConfig([
+  // Config Next.js
   ...nextVitals,
   ...nextTs,
-  // Override default ignores of eslint-config-next.
+
+  // Règles SonarJS recommandées (active déjà le plugin)
+  sonarjs.configs.recommended,
+
+  // Overrides perso des règles SonarJS (sans redéclarer le plugin)
+  {
+    rules: {
+      "sonarjs/cognitive-complexity": ["warn", 15],
+      // Tu pourras en rajouter ici au besoin
+      // "sonarjs/no-duplicate-string": "warn",
+      // "sonarjs/no-identical-functions": "warn",
+    },
+  },
+
+  // Fichiers ignorés
   globalIgnores([
-    // Default ignores of eslint-config-next:
     ".next/**",
     "out/**",
     "build/**",
     "next-env.d.ts",
   ]),
 ]);
-
-export default eslintConfig;

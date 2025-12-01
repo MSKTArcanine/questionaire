@@ -1,0 +1,122 @@
+name: CI
+
+on:
+  pull_request:
+    branches: ["main", "dev"]
+  push:
+    branches: ["main", "dev"]
+
+jobs:
+  frontend:
+    name: Frontend (Next.js + pnpm)
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+          cache-dependency-path: "frontend/pnpm-lock.yaml"
+
+      - name: Enable corepack
+        run: corepack enable
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Tests (placeholder)
+        run: pnpm test
+
+  backend_lint:
+    name: Backend (Symfony lint)
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: mbstring, intl, pdo_pgsql
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Lint Symfony config & container
+        run: composer lint
+
+  api_tests:
+    name: API tests (make test-api)
+    runs-on: ubuntu-latest
+
+    # Service DB aligné avec docker-compose (Postgres 16)
+    services:
+      db:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: questionaire
+          POSTGRES_USER: questionaire
+          POSTGRES_PASSWORD: secret
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U questionaire"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    env:
+      POSTGRES_DB: questionaire
+      POSTGRES_USER: questionaire
+      POSTGRES_PASSWORD: secret
+      # 127.0.0.1 au lieu de "db"
+      DATABASE_URL: postgresql://questionaire:secret@127.0.0.1:5432/questionaire?serverVersion=16&charset=utf8
+      APP_ENV: test
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: mbstring, intl, pdo_pgsql
+          coverage: none
+
+      # Dépendances backend
+      - name: Install backend dependencies
+        working-directory: backend
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      # migrate
+      - name: Run database migrations
+        working-directory: backend
+        run: php bin/console doctrine:migrations:migrate --no-interaction
+
+      # Dépendances de tests-api
+      - name: Install API test dependencies
+        working-directory: tests-api
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Run API tests via Makefile (test-api)
+        working-directory: .
+        run: make test-api
