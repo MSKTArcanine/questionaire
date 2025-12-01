@@ -1,5 +1,5 @@
+import { AdminLogoutButton } from "@/component/admin/AdminLogOutButton";
 import SideActions from "@/component/admin/SideActions";
-import { AdminLogoutButton } from "@/component/user/UserLogOutButton";
 import type { ReactNode } from "react";
 
 export default function AdminLayout({ children }: { readonly children: ReactNode }) {

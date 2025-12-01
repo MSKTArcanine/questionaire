@@ -1,6 +1,7 @@
 'use client';
 
 import UserListItemForm from "@/component/user/UserListItemForm";
+import { UserLogoutButton } from "@/component/user/UserLogOutButton";
 import { useQuestionnaires } from "@/lib/hooks/useQuestionnaires";
 import { useState } from "react";
 
@@ -15,9 +16,17 @@ export default function UserSearchFormPage() {
 return (
     <>
     <div className="border-b border-base-300 bg-base-100 px-8 py-4 shrink-0">
+    <div className="relative flex items-center justify-center">
+    {/* Bouton logout à gauche, hors flux, donc le titre reste centré */}
+    <div className="absolute left-0">
+      <UserLogoutButton />
+    </div>
+
     <h2 className="text-2xl font-bold text-center">
-    Recherche d&apos;un formulaire
+      Recherche d&apos;un formulaire
     </h2>
+  </div>
+
     </div>
     
     <div className="flex-1 overflow-y-auto no-scrollbar">

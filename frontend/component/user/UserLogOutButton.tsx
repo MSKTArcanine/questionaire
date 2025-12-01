@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export function AdminLogoutButton() {
+export function UserLogoutButton() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 

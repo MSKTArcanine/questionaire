@@ -22,7 +22,6 @@ final class AdminDashBoardController extends AbstractController
         private readonly QuestionnaireRepository $questionnaireRepository,
         private readonly AnswerSessionRepository $answerSessionRepository,
         private readonly AnswerRepository $answerRepository,
-        private readonly EntityManagerInterface $entityManager,
     ) {}
 
     /**
