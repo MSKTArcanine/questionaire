@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { AnswerSessionApiResponse } from "@/lib/types";
-import FormFillHeader from "@/component/questionnaire/FormFillHeader";
 import FormFillFooter from "@/component/questionnaire/FormFillFooter";
+import FormFillHeader from "@/component/questionnaire/FormFillHeader";
 import QuestionnaireHeader from "@/component/questionnaire/QuestionnaireHeader";
 import QuestionNode from "@/component/questionnaire/QuestionNode";
+import { AnswerSessionApiResponse } from "@/lib/types";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 type AnswerSession = AnswerSessionApiResponse["data"];
 
@@ -107,7 +107,7 @@ export default function FormFillPage() {
     if(!isMultimedia && selectedChoiceId === null) return;
 
     const choiceIdEntreLesDeux = isMultimedia ? currentQuestion.choices[0]?.id ?? null : selectedChoiceId;
-    if(!choiceIdEntreLesDeux){ //TODO: Remplacer par leur propre .tsx plus tard.
+    if(!choiceIdEntreLesDeux){ 
       return;
     }
     try {
