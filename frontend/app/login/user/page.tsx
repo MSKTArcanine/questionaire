@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, useState } from "react";
 
@@ -56,7 +57,7 @@ export default function LoginPage() {
         <div className="text-center mb-8">
         <h1 className="text-3xl font-bold">Connexion</h1>
         <p className="mt-2 text-sm opacity-70">
-        Accédez à l’espace administration des questionnaires.
+        Accédez à l’espace visiteur des questionnaires.
         </p>
         </div>
         
@@ -76,7 +77,7 @@ export default function LoginPage() {
         id="email"
         type="email"
         className="input input-bordered w-full"
-        placeholder="admin@mediatheque.fr"
+        placeholder="user@example.fr"
         autoComplete="email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
@@ -128,6 +129,18 @@ export default function LoginPage() {
         <p className="mt-4 text-center text-xs opacity-70">
             Visiteur : Email + PIN 4 chiffres.
         </p>
+
+        <Link
+        href={"/login/admin"}
+        className="btn btn-ghost w-full border-amber-50"
+        >
+        {isSubmitting ? (
+            <span className="loading loading-spinner loading-sm" />
+        ) : (
+            "Administrateur ?"
+        )}
+        </Link>
+
         </div>
         </div>
     );

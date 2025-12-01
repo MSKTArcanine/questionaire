@@ -1,7 +1,8 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { FormEvent, useState } from "react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -119,6 +120,16 @@ export default function LoginPage() {
     <p className="mt-4 text-center text-xs opacity-70">
       Admin : Email + password.
     </p>
+    <Link
+        href={"/login/user"}
+        className="btn btn-ghost w-full border-amber-50"
+        >
+        {isSubmitting ? (
+            <span className="loading loading-spinner loading-sm" />
+        ) : (
+            "Visiteur ?"
+        )}
+        </Link>
     </div>
     </div>
   );

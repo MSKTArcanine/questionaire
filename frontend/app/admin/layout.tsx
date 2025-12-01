@@ -1,4 +1,5 @@
 import SideActions from "@/component/admin/SideActions";
+import { AdminLogoutButton } from "@/component/user/UserLogOutButton";
 import type { ReactNode } from "react";
 
 export default function AdminLayout({ children }: { readonly children: ReactNode }) {
@@ -21,6 +22,7 @@ export default function AdminLayout({ children }: { readonly children: ReactNode
           <button className="btn btn-sm mt-auto justify-start border-base-300 bg-base-100">
             Autre outil
           </button>
+          <AdminLogoutButton/>
         </aside>
 
         <main className="flex-1 flex flex-col">
