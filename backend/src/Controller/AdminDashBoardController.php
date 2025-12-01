@@ -45,7 +45,6 @@ final class AdminDashBoardController extends AbstractController
                 'status'        => AnswerSessionStatus::FINISHED,
             ]);
 
-            //TODO: SI CA FOIRE C EST LA LE SOUCIS
             $completionRate = $totalSessions > 0
                 ? $finishedSessions / $totalSessions
                 : 0.0;
@@ -155,7 +154,6 @@ final class AdminDashBoardController extends AbstractController
             ->getQuery()
             ->getResult();
 
-        //TODO: SI CA FOIRE, C'EST LA AUSSI.
         $handle = fopen('php://temp', 'r+');
 
         //La magie du copier coller de "fputcsv", pire nom.

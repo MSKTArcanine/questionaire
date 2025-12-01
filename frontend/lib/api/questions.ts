@@ -101,5 +101,5 @@ export async function uploadQuestionMedia(
     }
 
     const body = await res.json();
-    return body.data as QuestionNode;
+    return mapApiQuestionToNode(body.data);
 }

@@ -2,60 +2,50 @@
 
 namespace Tests;
 
-use PHPUnit\Framework\TestCase;
-use Symfony\Component\HttpClient\HttpClient;
-
-class QuestionnaireGETApiTest extends TestCase
+class QuestionnaireGETApiTest extends AbstractApiTestCase
 {
-    private string $baseUrl;
-    protected function setUp(): void
-    {
-        parent::setUp();
-        $this->baseUrl = $_ENV['TESTS_BASE_URL'] ?? 'https://questionaire.localhost';
-    }
-
     public function testListQuestionnaires(): void
     {
-        $client = HttpClient::create([
-            'verify_peer' => false, //Self signed
-            'verify_host' => false, //Pareil.
+        $response = $this->client->request('GET', $this->baseUrl . '/api/questionnaires', [
+            'headers' => $this->authHeaders(), // user
         ]);
 
-        $response = $client->request('GET', $this->baseUrl . '/api/questionnaires/'); //curl ...
+        $this->assertSame(200, $response->getStatusCode());
 
-        $this->assertSame(200, $response->getStatusCode()); //Api renvoi succès ?
+        $data = $response->toArray();
 
-        $data = $response->toArray(); //Json -> Array
+        $this->assertIsArray($data);
+        $this->assertArrayHasKey('data', $data);
+        $this->assertIsArray($data['data']);
+    }
 
-        $this->assertIsArray($data); //JSON correct ?
-        $this->assertArrayHasKey('data', $data); //Réussite = 'data' => ...
-        $this->assertIsArray($data['data']); //$data est bien un tablal.
+    public function testListQuestionnairesUnauthorized(): void
+    {
+        $response = $this->client->request('GET', $this->baseUrl . '/api/questionnaires');
+
+        $this->assertSame(200, $response->getStatusCode());
     }
 
     public function testQuestionnaireNotFound(): void
     {
-        $client = HttpClient::create([
-            'verify_peer' => false,
-            'verify_host' => false,
+        $response = $this->client->request('GET', $this->baseUrl . '/api/questionnaires/999999', [
+            'headers' => $this->authHeaders(),
         ]);
 
-        $response = $client->request('GET', $this->baseUrl . '/api/questionnaires/999999'); //Test 'débile'
+        $this->assertSame(404, $response->getStatusCode());
 
-        $this->assertSame(404, $response->getStatusCode()); //id not found = 404
+        $data = $response->toArray(false);
 
-        $data = $response->toArray(false); //Simple message error =>
-
-        $this->assertArrayHasKey('error', $data); //Check la présence du error
-        $this->assertSame('Questionnaire not found', $data['error']); //Ptet abusé sur ce test.
+        $this->assertArrayHasKey('error', $data);
+        $this->assertSame('Questionnaire not found', $data['error']);
     }
 
-    public function testQuestionnaireBase():void{
-        $client = HttpClient::create([
-            'verify_peer' => false,
-            'verify_host' => false,
+    public function testQuestionnaireBase(): void
+    {
+        // liste
+        $listResponse = $this->client->request('GET', $this->baseUrl . '/api/questionnaires', [
+            'headers' => $this->authHeaders(),
         ]);
-        
-        $listResponse = $client->request('GET', $this->baseUrl . '/api/questionnaires');
         $this->assertSame(200, $listResponse->getStatusCode());
 
         $listData = $listResponse->toArray();
@@ -63,11 +53,62 @@ class QuestionnaireGETApiTest extends TestCase
         $this->assertArrayHasKey('data', $listData);
         $this->assertNotEmpty($listData['data']);
 
-        $firstQuestionnaire = $listData['data'][0];
+        // Find questionnaire sinon création
+        $firstQuestionnaire = null;
+        foreach ($listData['data'] as $item) {
+            if (isset($item['rootQuestionId']) && $item['rootQuestionId'] !== null) {
+                $detail = $this->client->request('GET', $this->baseUrl . '/api/questionnaires/' . $item['id'], [
+                    'headers' => $this->authHeaders(),
+                ]);
+                $this->assertSame(200, $detail->getStatusCode());
+                $details = $detail->toArray(false)['data'];
+                if (!empty($details['questions'])) {
+                    $firstQuestionnaire = $item;
+                    break;
+                }
+            }
+        }
+        if ($firstQuestionnaire === null) {
+            $createResponse = $this->client->request('POST', $this->baseUrl . '/api/questionnaires', [
+                'json' => ['title' => 'test questionnaire', 'description' => 'test description'],
+                'headers' => array_merge(['Content-Type' => 'application/json'], $this->authHeaders(true)),
+            ]);
+            $this->assertSame(201, $createResponse->getStatusCode());
+            $created = $createResponse->toArray(false)['data'];
+
+            $qResponse = $this->client->request('POST', $this->baseUrl . '/api/questions', [
+                'json' => ['questionnaireId' => $created['id'], 'title' => 'Root Q', 'description' => 'D'],
+                'headers' => array_merge(['Content-Type' => 'application/json'], $this->authHeaders(true)),
+            ]);
+            $this->assertSame(201, $qResponse->getStatusCode());
+            $question = $qResponse->toArray(false)['data'];
+
+            // creer choix pour root
+            $cResponse = $this->client->request('POST', $this->baseUrl . '/api/choices', [
+                'json' => ['questionId' => $question['id'], 'content' => 'Choice 1'],
+                'headers' => array_merge(['Content-Type' => 'application/json'], $this->authHeaders(true)),
+            ]);
+            $this->assertSame(201, $cResponse->getStatusCode());
+
+            // details = Questions + Choices
+            $detailCheck = $this->client->request('GET', $this->baseUrl . '/api/questionnaires/' . $created['id'], [
+                'headers' => $this->authHeaders(true),
+            ]);
+            $this->assertSame(200, $detailCheck->getStatusCode());
+            $detailsData = $detailCheck->toArray(false)['data'] ?? null;
+            $this->assertNotNull($detailsData);
+            $this->assertArrayHasKey('questions', $detailsData);
+            $this->assertNotEmpty($detailsData['questions']);
+            $firstQuestionnaire = $created;
+        }
+
         $this->assertArrayHasKey('id', $firstQuestionnaire);
         $id = $firstQuestionnaire['id'];
 
-        $response = $client->request('GET', $this->baseUrl . '/api/questionnaires/' . $id);
+        // détail
+        $response = $this->client->request('GET', $this->baseUrl . '/api/questionnaires/' . $id, [
+            'headers' => $this->authHeaders(),
+        ]);
         $this->assertSame(200, $response->getStatusCode());
 
         $data = $response->toArray();

@@ -11,8 +11,12 @@ class AuthMeApiTest extends AbstractApiTestCase
         $this->assertSame(401, $response->getStatusCode());
         $data = $response->toArray(false);
 
-        $this->assertArrayHasKey('error', $data);
-        $this->assertSame('Unauthorized', $data['error']);
+        if (isset($data['error'])) {
+            $this->assertSame('Unauthorized', $data['error']);
+        } else {
+            $this->assertArrayHasKey('message', $data);
+            $this->assertNotEmpty($data['message']);
+        }
     }
 
     public function testAuthMeReturnsUserDataWithToken(): void

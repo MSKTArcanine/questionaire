@@ -30,13 +30,22 @@ security:
             jwt: ~
 
     access_control:
-        - { path: ^/api/auth/login, roles: PUBLIC_ACCESS }
-        - { path: ^/api/auth/user, roles: PUBLIC_ACCESS }
-        - { path: ^/api/questionnaires, roles: PUBLIC_ACCESS }
-
-        - { path: ^/api/sessions, roles: IS_AUTHENTICATED_FULLY }
-        - { path: ^/api/questions, roles: IS_AUTHENTICATED_FULLY }
-
+        - { path: "^/api/ping", roles: "PUBLIC_ACCESS" }
+        - { path: "^/api/auth/login", roles: "PUBLIC_ACCESS" }
+        - { path: "^/api/auth/user", roles: "PUBLIC_ACCESS" }
+        - { path: "^/api/auth/me", roles: "IS_AUTHENTICATED_FULLY" }
+        - {
+              path: "^/api/questionnaires$",
+              roles: "PUBLIC_ACCESS",
+              methods: ["GET"],
+          }
+        - {
+              path: "^/api/questionnaires/",
+              roles: "PUBLIC_ACCESS",
+              methods: ["GET"],
+          }
+        - { path: "^/api/choices", roles: "PUBLIC_ACCESS" }
+        - { path: "^/api/sessions", roles: "IS_AUTHENTICATED_FULLY" }
+        - { path: "^/api/questions", roles: "IS_AUTHENTICATED_FULLY" }
         # Tout tombe sous admin sinon.
-
-        - { path: ^/api, roles: ROLE_ADMIN }
+        - { path: "^/api", roles: "ROLE_ADMIN" }

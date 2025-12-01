@@ -1,7 +1,5 @@
 <?php
 
-//TODO: FAUT REFAIRE LA GIGA FONCTIONS AVEC 17 CONDITIONS.
-
 namespace App\Controller;
 
 use App\Entity\Answer;
@@ -48,7 +46,7 @@ final class AnswerSessionController extends AbstractController
             'mimeType'  => $media->getMimeType()->value,
             'altText'   => $media->getAltText(),
             'streamUrl' => $this->generateUrl(
-                'api_questionsstream_media',              // <- name = "api_media_" + "stream"
+                'api_questions_stream_media',              // <- name = "api_questions_" + "stream_media"
                 ['id' => $media->getId()],
                 UrlGeneratorInterface::ABSOLUTE_URL
             ),
@@ -141,100 +139,57 @@ final class AnswerSessionController extends AbstractController
 
     #[Route(path: '/{slug}/answers', name: 'postAnswers', methods: ['POST'])]
     public function postAnswers(string $slug, Request $request):JsonResponse{
-        //Du coup faut verif le content :
-        $contentType = $request->headers->get('Content-Type', '');
-        $choiceId = null;
-        /**
-         * @var UploadedFile|null $uploadedFile
-         */
-        $uploadedFile = null;
+        // parse incoming request to extract choiceId and file
+        [$choiceId, $uploadedFile] = $this->parseChoiceIdAndFile($request);
 
-        if (str_starts_with($contentType, 'application/json')) {
-            $body = json_decode($request->getContent(), true) ?? [];
-            $choiceId = $body['choiceId'] ?? null;
-        }else{
-            $choiceId = $request->request->get('choiceId');
-            $uploadedFile = $request->files->get('file');
-        }
-
-        if($choiceId === null){
+        if ($choiceId === null) {
             return $this->json(['error' => 'ChoiceId is required'], 400);
         }
 
-        /**
-         * @var AnswerSession | null $answerSession
-         */
+        // find the session
+        /** @var AnswerSession|null $answerSession */
         $answerSession = $this->answerSessionRepository->find($slug);
-
-        if(!$answerSession){
+        if (!$answerSession) {
             return $this->json(['error' => 'AnswerSession not found'], 404);
         }
 
-        if($answerSession->getStatus() === AnswerSessionStatus::FINISHED){
+        // finished check
+        if ($answerSession->getStatus() === AnswerSessionStatus::FINISHED) {
             return $this->json(['error' => 'AnswerSession is already finished'], 409);
         }
 
+        // current question check
         $currentQuestion = $answerSession->getCurrentQuestion();
-        if(!$currentQuestion){
+        if (!$currentQuestion) {
             return $this->json(['error' => 'Current question not found'], 500);
         }
 
-        /**
-         * @var Choice | null $choice
-         */
+        // validate choice exists and belongs to current question
+        /** @var Choice|null $choice */
         $choice = $this->choiceRepository->find($choiceId);
-        if(!$choice){
+        if (!$choice) {
             return $this->json(['error' => 'Choice not found'], 404);
         }
-
-        if($choice->getQuestion()?->getId() !== $currentQuestion->getId()){
+        if ($choice->getQuestion()?->getId() !== $currentQuestion->getId()) {
             return $this->json(['error' => 'Choice not for currentQuestion'], 400);
         }
 
-        // Creation de l'answer
-        $answer = new Answer();
-        $answer->setAnswerSession($answerSession);
-        $answer->setQuestion($currentQuestion);
-        $answer->setChoice($choice);
+        // create Answer
+        $answer = $this->createAnswer($answerSession, $currentQuestion, $choice);
 
-        if($uploadedFile instanceof UploadedFile){
-            $mime = $uploadedFile->getMimeType() ?? '';
-            if(!in_array($mime, ['image/png', 'video/mp4'], true)){
-                return $this->json(['error' => 'Unsupported media type'], 400);
+        // if there's an uploaded file, process it
+        if ($uploadedFile instanceof UploadedFile) {
+            $errorResp = $this->handleUploadedFile($uploadedFile, $answerSession, $answer);
+            if ($errorResp instanceof JsonResponse) {
+                return $errorResp;
             }
-
-            /** @var string $uploadDir */
-            $uploadDir = $this->getParameter('answer_upload_dir');
-            if(!is_dir($uploadDir)){
-                mkdir($uploadDir, 0775, true);
-            }
-
-            $extension = $uploadedFile->guessExtension() ?: 'bin';
-            $safeBase = pathinfo($uploadedFile->getClientOriginalName(), PATHINFO_FILENAME);
-            $safeBase = preg_replace('/[^a-zA-Z0-9_-]/', '_', $safeBase);
-
-            $newfilename = sprintf(
-                '%s_%s.%s',
-                (string) $answerSession->getId(),
-                uniqid($safeBase . '_', true),
-                $extension
-            );
-
-            $uploadedFile->move($uploadDir, $newfilename);
-
-            $publicPaht = '/uploads/answers/' . $newfilename;
-
-            $answer->setMediaPath($publicPaht);
-            $answer->setMediaName($uploadedFile->getClientOriginalName());
-            $answer->setMediaMimeType($mime);
         }
 
         $answerSession->addAnswer($answer);
 
-        // La ça marche
+        // move to next question or finish
         $nextQuestion = $choice->getNextQuestion();
-
-        if($nextQuestion !== null){
+        if ($nextQuestion !== null) {
             $answerSession->setCurrentQuestion($nextQuestion);
         } else {
             $answerSession->setCurrentQuestion(null);
@@ -245,6 +200,67 @@ final class AnswerSessionController extends AbstractController
         $this->entityManager->flush();
 
         return $this->json(['data' => $this->formatSession($answerSession)], 200);
+    }
+
+    private function parseChoiceIdAndFile(Request $request): array
+    {
+        $contentType = $request->headers->get('Content-Type', '');
+        $choiceId = null;
+        $uploadedFile = null;
+
+        if (str_starts_with((string) $contentType, 'application/json')) {
+            $body = json_decode($request->getContent(), true) ?? [];
+            $choiceId = $body['choiceId'] ?? null;
+        } else {
+            $choiceId = $request->request->get('choiceId');
+            $uploadedFile = $request->files->get('file');
+        }
+
+        return [$choiceId, $uploadedFile];
+    }
+
+    private function createAnswer(AnswerSession $answerSession, Question $currentQuestion, Choice $choice): Answer
+    {
+        $answer = new Answer();
+        $answer->setAnswerSession($answerSession);
+        $answer->setQuestion($currentQuestion);
+        $answer->setChoice($choice);
+        return $answer;
+    }
+
+    private function handleUploadedFile(UploadedFile $uploadedFile, AnswerSession $answerSession, Answer $answer): ?JsonResponse
+    {
+        $mime = $uploadedFile->getMimeType() ?? '';
+        if (!in_array($mime, ['image/png', 'video/mp4'], true)) {
+            return $this->json(['error' => 'Unsupported media type'], 400);
+        }
+
+        /** @var string $uploadDir */
+        $uploadDir = $this->getParameter('answer_upload_dir');
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0775, true);
+        }
+
+        $extension = $uploadedFile->guessExtension() ?: 'bin';
+        $safeBase = pathinfo($uploadedFile->getClientOriginalName(), PATHINFO_FILENAME);
+        $safeBase = preg_replace('/[^a-zA-Z0-9_-]/', '_', $safeBase);
+
+        $newfilename = sprintf(
+            '%s_%s.%s',
+            (string) $answerSession->getId(),
+            uniqid($safeBase . '_', true),
+            $extension
+        );
+
+        $uploadedFile->move($uploadDir, $newfilename);
+
+        $publicPath = '/uploads/answers/' . $newfilename;
+
+        $answer->setMediaPath($publicPath);
+        $answer->setMediaName($uploadedFile->getClientOriginalName());
+        $answer->setMediaMimeType($mime);
+
+        return null;
     }
 
     #[Route(path: '/{id}', name: 'getAS', methods: ['GET'])]

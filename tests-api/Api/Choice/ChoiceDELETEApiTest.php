@@ -2,33 +2,18 @@
 
 namespace Tests;
 
-use PHPUnit\Framework\TestCase;
-use Symfony\Component\HttpClient\HttpClient;
-use Symfony\Contracts\HttpClient\HttpClientInterface;
-
-class ChoiceDELETEApiTest extends TestCase
+class ChoiceDELETEApiTest extends AbstractApiTestCase
 {
-    private const APP_JSON = 'application/json';
-    private string $baseUrl;
-    private HttpClientInterface $client;
-    protected function setUp(): void
-    {
-        parent::setUp();
-        $this->baseUrl = $_ENV['TESTS_BASE_URL'] ?? 'https://questionaire.localhost';
-        $this->client = HttpClient::create([
-            'verify_peer' => false, // self-signed
-            'verify_host' => false,
-        ]);
-    }
 
     private function createQuestionId(): int
     {
+
         $responseQuestionnaire = $this->client->request('POST', $this->baseUrl . '/api/questionnaires', [
             'json' => [
                 'title' => 'questionnaire for question',
                 'description' => 'description',
             ],
-            'headers' => ['Content-Type' => self::APP_JSON],
+            'headers' => array_merge(['Content-Type' => self::APP_JSON], $this->authHeaders(true)),
         ]);
 
         $this->assertSame(201, $responseQuestionnaire->getStatusCode());
@@ -41,7 +26,7 @@ class ChoiceDELETEApiTest extends TestCase
                 'title' => 'Question for choice',
                 'description' => 'Description',
             ],
-            'headers' => ['Content-Type' => self::APP_JSON],
+            'headers' => array_merge(['Content-Type' => self::APP_JSON], $this->authHeaders(true)),
         ]);
 
         $this->assertSame(201, $responseQuestion->getStatusCode());

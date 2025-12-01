@@ -2,26 +2,12 @@
 
 namespace Tests;
 
-use PHPUnit\Framework\TestCase;
-use Symfony\Component\HttpClient\HttpClient;
-
-class ChoiceGETApiTest extends TestCase
+class ChoiceGETApiTest extends AbstractApiTestCase
 {
-    private string $baseUrl;
-    protected function setUp(): void
-    {
-        parent::setUp();
-        $this->baseUrl = $_ENV['TESTS_BASE_URL'] ?? 'https://questionaire.localhost';
-    }
 
     public function testListChoices(): void
     {
-        $client = HttpClient::create([
-            'verify_peer' => false,
-            'verify_host' => false,
-        ]);
-
-        $response = $client->request('GET', $this->baseUrl . '/api/choices');
+        $response = $this->client->request('GET', $this->baseUrl . '/api/choices');
 
         $this->assertSame(200, $response->getStatusCode());
 
@@ -35,12 +21,7 @@ class ChoiceGETApiTest extends TestCase
 
     public function testChoiceNotFound(): void
     {
-        $client = HttpClient::create([
-            'verify_peer' => false,
-            'verify_host' => false,
-        ]);
-
-        $response = $client->request('GET', $this->baseUrl . '/api/choices/999999');
+        $response = $this->client->request('GET', $this->baseUrl . '/api/choices/999999');
 
         $this->assertSame(404, $response->getStatusCode());
 
@@ -52,12 +33,7 @@ class ChoiceGETApiTest extends TestCase
 
     public function testChoiceBase(): void
     {
-        $client = HttpClient::create([
-            'verify_peer' => false,
-            'verify_host' => false,
-        ]);
-
-        $listResponse = $client->request('GET', $this->baseUrl . '/api/choices');
+        $listResponse = $this->client->request('GET', $this->baseUrl . '/api/choices');
         $this->assertSame(200, $listResponse->getStatusCode());
 
         $listData = $listResponse->toArray();
@@ -69,7 +45,7 @@ class ChoiceGETApiTest extends TestCase
         $this->assertArrayHasKey('id', $firstChoice);
         $choiceId = $firstChoice['id'];
 
-        $response = $client->request('GET', $this->baseUrl . '/api/choices/' . $choiceId);
+        $response = $this->client->request('GET', $this->baseUrl . '/api/choices/' . $choiceId);
         $this->assertSame(200, $response->getStatusCode());
 
         $data = $response->toArray();

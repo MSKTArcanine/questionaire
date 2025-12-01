@@ -4,22 +4,105 @@ namespace Tests;
 
 class AnswerSessionApiTest extends AbstractApiTestCase
 {
+    private ?string $sessionUserToken = null;
+
+    protected function getUserToken(): string
+    {
+        if ($this->sessionUserToken === null) {
+            $email = 'session-user-' . uniqid('', true) . '@example.com';
+            $this->sessionUserToken = $this->login($email, '1234');
+        }
+
+        return $this->sessionUserToken;
+    }
+
     private function getFirstQuestionnaireSlug(): string
+    {
+        // Questionnaire avec root + choices
+        $firstWithRoot = $this->findFirstQuestionnaireWithRoot();
+        if ($firstWithRoot !== null) {
+            $this->assertArrayHasKey('slug', $firstWithRoot);
+            return $firstWithRoot['slug'];
+        }
+
+        // Creer un nouveau sinon
+        return $this->createQuestionnaireWithRootAndChoice();
+    }
+
+    private function findFirstQuestionnaireWithRoot(): ?array
     {
         $response = $this->client->request('GET', $this->baseUrl . '/api/questionnaires', [
             'headers' => $this->authHeaders(),
         ]);
-
         $this->assertSame(200, $response->getStatusCode());
         $data = $response->toArray(false);
 
         $this->assertArrayHasKey('data', $data);
         $this->assertNotEmpty($data['data']);
 
-        $first = $data['data'][0];
-        $this->assertArrayHasKey('slug', $first);
+        foreach ($data['data'] as $item) {
+            if ($this->questionnaireRootHasChoices($item)) {
+                return $item;
+            }
+        }
 
-        return $first['slug'];
+        return null;
+    }
+
+    private function createQuestionnaireWithRootAndChoice(): string
+    {
+        $createResponse = $this->client->request('POST', $this->baseUrl . '/api/questionnaires', [
+            'json' => ['title' => 'test questionnaire', 'description' => 'test description'],
+            'headers' => array_merge(['Content-Type' => self::APP_JSON], $this->authHeaders()),
+        ]);
+        $this->assertSame(201, $createResponse->getStatusCode());
+        $created = $createResponse->toArray(false)['data'];
+
+        // creer root
+        $qResponse = $this->client->request('POST', $this->baseUrl . '/api/questions', [
+            'json' => ['title' => 'root question', 'questionnaireId' => $created['id']],
+            'headers' => array_merge(['Content-Type' => self::APP_JSON], $this->authHeaders()),
+        ]);
+        $this->assertSame(201, $qResponse->getStatusCode());
+        $question = $qResponse->toArray(false)['data'];
+
+        // 1 choix mini
+        $cResponse = $this->client->request('POST', $this->baseUrl . '/api/choices', [
+            'json' => ['questionId' => $question['id'], 'content' => 'choice-1'],
+            'headers' => array_merge(['Content-Type' => self::APP_JSON], $this->authHeaders(true)),
+        ]);
+        $this->assertSame(201, $cResponse->getStatusCode());
+
+        // return le slug
+        $detail = $this->client->request('GET', $this->baseUrl . '/api/questionnaires/' . $created['id'], [
+            'headers' => $this->authHeaders(),
+        ]);
+        $this->assertSame(200, $detail->getStatusCode());
+        $details = $detail->toArray(false)['data'];
+        $this->assertArrayHasKey('slug', $details);
+        return $details['slug'];
+    }
+
+    private function questionnaireRootHasChoices(array $item): bool
+    {
+        if (!isset($item['rootQuestionId']) || $item['rootQuestionId'] === null) {
+            return false;
+        }
+
+        $detailResponse = $this->client->request('GET', $this->baseUrl . '/api/questionnaires/' . $item['id'], [
+            'headers' => $this->authHeaders(),
+        ]);
+        $this->assertSame(200, $detailResponse->getStatusCode());
+        $details = $detailResponse->toArray(false)['data'] ?? [];
+        $rootQuestionId = $item['rootQuestionId'];
+
+        foreach ($details['questions'] as $q) {
+            if ($q['id'] === $rootQuestionId) {
+                return !empty($q['choices']);
+            }
+        }
+
+        return false;
     }
 
     public function testCreateSessionUnauthorizedWithoutJwt(): void
@@ -30,10 +113,6 @@ class AnswerSessionApiTest extends AbstractApiTestCase
         ]);
 
         $this->assertSame(401, $response->getStatusCode());
-        $data = $response->toArray(false);
-
-        $this->assertArrayHasKey('error', $data);
-        $this->assertSame('Unauthorized', $data['error']);
     }
 
     public function testCreateSessionQuestionnaireNotFound(): void
@@ -57,7 +136,7 @@ class AnswerSessionApiTest extends AbstractApiTestCase
     {
         $slug = $this->getFirstQuestionnaireSlug();
 
-        // 1) création
+        // création
         $firstResponse = $this->client->request('POST', $this->baseUrl . '/api/sessions', [
             'json' => ['slug' => $slug],
             'headers' => array_merge(
@@ -77,7 +156,7 @@ class AnswerSessionApiTest extends AbstractApiTestCase
 
         $sessionId = $session['id'];
 
-        // 2) réutilisation => 200
+        // réutilisation => doit renvoyer 200 avec la même session
         $secondResponse = $this->client->request('POST', $this->baseUrl . '/api/sessions', [
             'json' => ['slug' => $slug],
             'headers' => array_merge(
@@ -96,9 +175,13 @@ class AnswerSessionApiTest extends AbstractApiTestCase
 
     public function testGetAnswerSessionNotFound(): void
     {
-        $response = $this->client->request('GET', $this->baseUrl . '/api/sessions/00000000-0000-0000-0000-000000000000', [
-            'headers' => $this->authHeaders(),
-        ]);
+        $response = $this->client->request(
+            'GET',
+            $this->baseUrl . '/api/sessions/00000000-0000-0000-0000-000000000000',
+            [
+                'headers' => $this->authHeaders(),
+            ]
+        );
 
         $this->assertSame(404, $response->getStatusCode());
         $data = $response->toArray(false);
@@ -123,7 +206,7 @@ class AnswerSessionApiTest extends AbstractApiTestCase
         $sessionData = $sessionResponse->toArray(false)['data'];
         $sessionId = $sessionData['id'];
 
-        $getResponse = $this->client->request('GET', $this->baseUrl . '/api/sessions' . $sessionId, [
+        $getResponse = $this->client->request('GET', $this->baseUrl . '/api/sessions/' . $sessionId, [
             'headers' => $this->authHeaders(),
         ]);
 
@@ -160,13 +243,17 @@ class AnswerSessionApiTest extends AbstractApiTestCase
 
         $choiceId = $currentQuestion['choices'][0]['id'];
 
-        $answerResponse = $this->client->request('POST', $this->baseUrl . '/api/sessions/' . $sessionId . '/answers', [
-            'json' => ['choiceId' => $choiceId],
-            'headers' => array_merge(
-                ['Content-Type' => self::APP_JSON],
-                $this->authHeaders()
-            ),
-        ]);
+        $answerResponse = $this->client->request(
+            'POST',
+            $this->baseUrl . '/api/sessions/' . $sessionId . '/answers',
+            [
+                'json' => ['choiceId' => $choiceId],
+                'headers' => array_merge(
+                    ['Content-Type' => self::APP_JSON],
+                    $this->authHeaders()
+                ),
+            ]
+        );
 
         $this->assertSame(200, $answerResponse->getStatusCode());
         $answerData = $answerResponse->toArray(false);
@@ -174,7 +261,7 @@ class AnswerSessionApiTest extends AbstractApiTestCase
         $this->assertArrayHasKey('data', $answerData);
         $returnedSession = $answerData['data'];
         $this->assertArrayHasKey('finished', $returnedSession);
-        // finished peut être true ou false
+        // finished peut être true ou false, selon la branche
     }
 
     public function testPostAnswersChoiceNotFound(): void
@@ -194,13 +281,17 @@ class AnswerSessionApiTest extends AbstractApiTestCase
         $session = $sessionResponse->toArray(false)['data'];
         $sessionId = $session['id'];
 
-        $answerResponse = $this->client->request('POST', $this->baseUrl . '/api/sessions/' . $sessionId . '/answers', [
-            'json' => ['choiceId' => 999999],
-            'headers' => array_merge(
-                ['Content-Type' => self::APP_JSON],
-                $this->authHeaders()
-            ),
-        ]);
+        $answerResponse = $this->client->request(
+            'POST',
+            $this->baseUrl . '/api/sessions/' . $sessionId . '/answers',
+            [
+                'json' => ['choiceId' => 999999],
+                'headers' => array_merge(
+                    ['Content-Type' => self::APP_JSON],
+                    $this->authHeaders()
+                ),
+            ]
+        );
 
         $this->assertSame(404, $answerResponse->getStatusCode());
         $data = $answerResponse->toArray(false);

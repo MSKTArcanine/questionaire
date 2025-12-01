@@ -2,30 +2,17 @@
 
 namespace Tests;
 
-use PHPUnit\Framework\TestCase;
-use Symfony\Component\HttpClient\HttpClient;
-
-class QuestionGETApiTest extends TestCase
+final class QuestionGETApiTest extends AbstractApiTestCase
 {
-    private string $baseUrl;
-    protected function setUp(): void
-    {
-        parent::setUp();
-        $this->baseUrl = $_ENV['TESTS_BASE_URL'] ?? 'https://questionaire.localhost';
-    }
-
     public function testListQuestions(): void
     {
-        $client = HttpClient::create([
-            'verify_peer' => false,
-            'verify_host' => false,
+        $response = $this->client->request('GET', $this->baseUrl . '/api/questions', [
+            'headers' => $this->authHeaders(true),
         ]);
-
-        $response = $client->request('GET', $this->baseUrl . '/api/questions');
 
         $this->assertSame(200, $response->getStatusCode());
 
-        $data = $response->toArray();
+        $data = $response->toArray(false);
 
         $this->assertIsArray($data);
         $this->assertArrayHasKey('data', $data);
@@ -33,14 +20,18 @@ class QuestionGETApiTest extends TestCase
         $this->assertNotEmpty($data['data']);
     }
 
+    public function testListQuestionsUnauthorized(): void
+    {
+        $response = $this->client->request('GET', $this->baseUrl . '/api/questions');
+
+        $this->assertSame(401, $response->getStatusCode());
+    }
+
     public function testQuestionNotFound(): void
     {
-        $client = HttpClient::create([
-            'verify_peer' => false,
-            'verify_host' => false,
+        $response = $this->client->request('GET', $this->baseUrl . '/api/questions/999999', [
+            'headers' => $this->authHeaders(true),
         ]);
-
-        $response = $client->request('GET', $this->baseUrl . '/api/questions/999999');
 
         $this->assertSame(404, $response->getStatusCode());
 
@@ -52,15 +43,13 @@ class QuestionGETApiTest extends TestCase
 
     public function testQuestionBase(): void
     {
-        $client = HttpClient::create([
-            'verify_peer' => false,
-            'verify_host' => false,
+        $listResponse = $this->client->request('GET', $this->baseUrl . '/api/questions', [
+            'headers' => $this->authHeaders(true),
         ]);
 
-        $listResponse = $client->request('GET', $this->baseUrl . '/api/questions');
         $this->assertSame(200, $listResponse->getStatusCode());
 
-        $listData = $listResponse->toArray();
+        $listData = $listResponse->toArray(false);
         $this->assertArrayHasKey('data', $listData);
         $this->assertIsArray($listData['data']);
         $this->assertNotEmpty($listData['data']);
@@ -69,17 +58,39 @@ class QuestionGETApiTest extends TestCase
         $this->assertArrayHasKey('id', $firstQuestion);
         $questionId = $firstQuestion['id'];
 
-        $response = $client->request('GET', $this->baseUrl . '/api/questions/' . $questionId);
+        $response = $this->client->request('GET', $this->baseUrl . '/api/questions/' . $questionId, [
+            'headers' => $this->authHeaders(true),
+        ]);
+
         $this->assertSame(200, $response->getStatusCode());
 
-        $data = $response->toArray();
+        $data = $response->toArray(false);
         $this->assertArrayHasKey('data', $data);
+
         $question = $data['data'];
 
         $this->assertSame($questionId, $question['id']);
         $this->assertArrayHasKey('title', $question);
         $this->assertArrayHasKey('description', $question);
         $this->assertArrayHasKey('questionnaireId', $question);
+    }
 
+    public function testQuestionUnauthorized(): void
+    {
+        // On récupère un ID valide d'abord
+        $listResponse = $this->client->request('GET', $this->baseUrl . '/api/questions', [
+            'headers' => $this->authHeaders(true),
+        ]);
+
+        $this->assertSame(200, $listResponse->getStatusCode());
+        $listData = $listResponse->toArray(false);
+        $this->assertNotEmpty($listData['data']);
+
+        $id = $listData['data'][0]['id'];
+
+        // Puis on tente sans JWT
+        $response = $this->client->request('GET', $this->baseUrl . '/api/questions/' . $id);
+
+        $this->assertSame(401, $response->getStatusCode());
     }
 }

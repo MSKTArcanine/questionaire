@@ -80,7 +80,7 @@ export default function FormFillPage() {
     return () => {
       cancelled = true;
     };
-  }, [slug]);
+  }, [slug, router]);
 
   const currentQuestion = answerSession?.current_question ?? null;
   const isMultimedia = currentQuestion?.type === "MULTIMEDIA";

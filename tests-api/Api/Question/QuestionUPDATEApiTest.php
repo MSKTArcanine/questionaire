@@ -2,25 +2,8 @@
 
 namespace Tests;
 
-use PHPUnit\Framework\TestCase;
-use Symfony\Component\HttpClient\HttpClient;
-use Symfony\Contracts\HttpClient\HttpClientInterface;
-
-class QuestionUPDATEApiTest extends TestCase
+final class QuestionUPDATEApiTest extends AbstractApiTestCase
 {
-    private const APP_JSON = 'application/json';
-    private string $baseUrl;
-    private HttpClientInterface $client;
-    protected function setUp(): void
-    {
-        parent::setUp();
-        $this->baseUrl = $_ENV['TESTS_BASE_URL'] ?? 'https://questionaire.localhost';
-        $this->client = HttpClient::create([
-            'verify_peer' => false, // self-signed
-            'verify_host' => false,
-        ]);
-    }
-
     private function createQuestionnaireId(): int
     {
         $response = $this->client->request('POST', $this->baseUrl . '/api/questionnaires', [
@@ -28,36 +11,53 @@ class QuestionUPDATEApiTest extends TestCase
                 'title' => 'questionnaire for question',
                 'description' => 'description',
             ],
-            'headers' => ['Content-Type' => self::APP_JSON],
+            'headers' => array_merge(
+                ['Content-Type' => self::APP_JSON],
+                $this->authHeaders(true)
+            ),
         ]);
 
         $this->assertSame(201, $response->getStatusCode());
         $data = json_decode($response->getContent(false), true, 512, JSON_THROW_ON_ERROR);
+
         return $data['data']['id'];
     }
 
-    public function testUpdateQuestionSuccess(): void{
+    private function createQuestionId(): int
+    {
         $questionnaireId = $this->createQuestionnaireId();
 
-        $createQuestion = $this->client->request('POST', $this->baseUrl . '/api/questions', [
+        $response = $this->client->request('POST', $this->baseUrl . '/api/questions', [
             'json' => [
                 'questionnaireId' => $questionnaireId,
                 'title' => 'Original Title',
                 'description' => 'Original Description',
             ],
-            'headers' => ['Content-Type' => self::APP_JSON],
+            'headers' => array_merge(
+                ['Content-Type' => self::APP_JSON],
+                $this->authHeaders(true)
+            ),
         ]);
 
-        $this->assertSame(201, $createQuestion->getStatusCode());
-        $created = $createQuestion->toArray(false);
-        $id = $created['data']['id'];
+        $this->assertSame(201, $response->getStatusCode());
+        $data = $response->toArray(false);
+
+        return $data['data']['id'];
+    }
+
+    public function testUpdateQuestionSuccess(): void
+    {
+        $id = $this->createQuestionId();
 
         $updateQuestion = $this->client->request('PUT', $this->baseUrl . '/api/questions/' . $id, [
             'json' => [
                 'title' => 'Updated Title',
                 'description' => 'Updated Description',
             ],
-            'headers' => ['Content-Type' => self::APP_JSON],
+            'headers' => array_merge(
+                ['Content-Type' => self::APP_JSON],
+                $this->authHeaders(true)
+            ),
         ]);
 
         $this->assertSame(200, $updateQuestion->getStatusCode());
@@ -68,12 +68,16 @@ class QuestionUPDATEApiTest extends TestCase
         $this->assertSame('Updated Description', $question['description']);
     }
 
-    public function testUpdateQuestionNotFound(): void{
+    public function testUpdateQuestionNotFound(): void
+    {
         $updateQuestion = $this->client->request('PUT', $this->baseUrl . '/api/questions/999999', [
             'json' => [
                 'title' => 'osef',
             ],
-            'headers' => ['Content-Type' => self::APP_JSON],
+            'headers' => array_merge(
+                ['Content-Type' => self::APP_JSON],
+                $this->authHeaders(true)
+            ),
         ]);
 
         $this->assertSame(404, $updateQuestion->getStatusCode());
@@ -83,27 +87,18 @@ class QuestionUPDATEApiTest extends TestCase
         $this->assertSame('Question not found', $data['error']);
     }
 
-    public function testUpdateQuestionInvalid():void{
-        $questionnaireId = $this->createQuestionnaireId();
-
-        $createQuestion = $this->client->request('POST', $this->baseUrl . '/api/questions', [
-            'json' => [
-                'questionnaireId' => $questionnaireId,
-                'title' => 'Original Title',
-                'description' => 'Original Description',
-            ],
-            'headers' => ['Content-Type' => self::APP_JSON],
-        ]);
-
-        $this->assertSame(201, $createQuestion->getStatusCode());
-        $created = $createQuestion->toArray(false);
-        $id = $created['data']['id'];
+    public function testUpdateQuestionInvalidQuestionnaire(): void
+    {
+        $id = $this->createQuestionId();
 
         $updateQuestion = $this->client->request('PUT', $this->baseUrl . '/api/questions/' . $id, [
             'json' => [
                 'questionnaireId' => 999999,
             ],
-            'headers' => ['Content-Type' => self::APP_JSON],
+            'headers' => array_merge(
+                ['Content-Type' => self::APP_JSON],
+                $this->authHeaders(true)
+            ),
         ]);
 
         $this->assertSame(405, $updateQuestion->getStatusCode());
@@ -111,5 +106,21 @@ class QuestionUPDATEApiTest extends TestCase
 
         $this->assertArrayHasKey('error', $data);
         $this->assertSame('Invalide questionnaire', $data['error']);
+    }
+
+    public function testUpdateQuestionUnauthorized(): void
+    {
+        $id = $this->createQuestionId();
+
+        $updateQuestion = $this->client->request('PUT', $this->baseUrl . '/api/questions/' . $id, [
+            'json' => [
+                'title' => 'Nope',
+            ],
+            'headers' => [
+                'Content-Type' => self::APP_JSON,
+            ],
+        ]);
+
+        $this->assertSame(401, $updateQuestion->getStatusCode());
     }
 }

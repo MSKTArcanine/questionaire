@@ -22,7 +22,7 @@ class UsersFixtures extends Fixture
 
         $user1 = new User();
         $user1->setEmail("usertest@example.com");
-        $user1->setPassword('$13$M60yOQspumuIa3tzkV4vreGjRw0TvoQwbnybCWWHagbScj4baOX1i');
+        $user1->setPassword('$2y$13$dWKwRE98VhYoAT6dobwSd.vzHImvbWeZLgJRkmJyqrU7.O/W5kSeS');
         $user1->setRoles(["ROLE_USER"]);
 
         $manager->persist($user1);

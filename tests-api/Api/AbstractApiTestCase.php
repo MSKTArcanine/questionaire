@@ -28,7 +28,7 @@ abstract class AbstractApiTestCase extends TestCase
         ]);
     }
 
-    ///api/auth/user et retourne le JWT
+    // /api/auth/user et retourne le JWT
     protected function login(string $email, string $pin): string
     {
         $response = $this->client->request('POST', $this->baseUrl . '/api/auth/user', [
