@@ -20,7 +20,7 @@ abstract class AbstractApiTestCase extends TestCase
     {
         parent::setUp();
 
-        $this->baseUrl = $_ENV['TESTS_BASE_URL'] ?? 'https://questionaire.localhost';
+        $this->baseUrl = getenv('TESTS_BASE_URL') ?: ($_ENV['TESTS_BASE_URL'] ?? 'http://127.0.0.1:8000');
 
         $this->client = HttpClient::create([
             'verify_peer' => false,
@@ -37,7 +37,8 @@ abstract class AbstractApiTestCase extends TestCase
                 'password' => $pin,
             ],
             'headers' => ['Content-Type' => self::APP_JSON],
-        ]);
+                    // Pick TESTS_BASE_URL from dotenv (prefer), then environment, else default to local server
+                    $this->baseUrl = $_ENV['TESTS_BASE_URL'] ?? getenv('TESTS_BASE_URL') ?: 'http://127.0.0.1:8000';
 
         $this->assertSame(200, $response->getStatusCode(), 'Login doit renvoyer 200');
 
