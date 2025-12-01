@@ -12,7 +12,7 @@ export function AdminLogoutButton() {
       setLoading(true);
 
       const res = await fetch("/auth/logout", {
-        method: "POST",
+        method: "GET",
       });
 
       // Log.
