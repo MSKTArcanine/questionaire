@@ -44,7 +44,7 @@ abstract class AbstractApiTestCase extends TestCase
 
         $data = $response->toArray(false);
         $this->assertArrayHasKey('token', $data);
-
+        //Check head
         return $data['token'];
     }
 
