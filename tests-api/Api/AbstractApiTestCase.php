@@ -27,6 +27,7 @@ abstract class AbstractApiTestCase extends TestCase
             'verify_host' => false,
         ]);
     }
+    //Changement pour faire passer dans main
 
     // /api/auth/user et retourne le JWT
     protected function login(string $email, string $pin): string
