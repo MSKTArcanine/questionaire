@@ -87,9 +87,12 @@ jobs:
       POSTGRES_DB: questionaire
       POSTGRES_USER: questionaire
       POSTGRES_PASSWORD: secret
-      # 127.0.0.1 au lieu de "db"
+      # 127.0.0.1 au lieu de "db" (runner uses forwarded ports)
       DATABASE_URL: postgresql://questionaire:secret@127.0.0.1:5432/questionaire?serverVersion=16&charset=utf8
       APP_ENV: test
+      APP_DEBUG: "1"
+      # Point tests to local PHP server
+      TESTS_BASE_URL: http://127.0.0.1:8000
 
     steps:
       - name: Checkout
@@ -102,20 +105,103 @@ jobs:
           extensions: mbstring, intl, pdo_pgsql
           coverage: none
 
-      # Dépendances backend
-      - name: Install backend dependencies
-        working-directory: backend
-        run: composer install --no-interaction --prefer-dist --no-progress
+      # Create top-level .env (some tools expect to read it)
+      - name: Create root .env for tests-api
+        working-directory: .
+        run: |
+          cat > .env << EOF
+          APP_ENV=test
+          APP_DEBUG=1
+          APP_SECRET=ci_secret
+          DATABASE_URL=${DATABASE_URL}
+          DEFAULT_URI=http://127.0.0.1
+          TESTS_BASE_URL=${TESTS_BASE_URL}
+          EOF
 
-      # migrate
-      - name: Run database migrations
+      - name: Create .env for backend
         working-directory: backend
-        run: php bin/console doctrine:migrations:migrate --no-interaction
+        run: |
+          cat > .env << EOF
+          APP_ENV=test
+          APP_DEBUG=1
+          APP_SECRET=ci_secret
+          DATABASE_URL=${DATABASE_URL}
+          DEFAULT_URI=http://127.0.0.1
+          ###> lexik/jwt-authentication-bundle ###
+          JWT_SECRET_KEY=%kernel.project_dir%/config/jwt/private.pem
+          JWT_PUBLIC_KEY=%kernel.project_dir%/config/jwt/public.pem
+          JWT_PASSPHRASE=8b8eeb22e900dd40f1deab20ef60c728fc283d315aec32c956a00ab73385d99b
+          ###< lexik/jwt-authentication-bundle ###
+          EOF
 
-      # Dépendances de tests-api
+      - name: Install backend dependencies (no scripts)
+        working-directory: backend
+        run: composer install --no-interaction --prefer-dist --no-progress --no-scripts
+
+      - name: Run backend composer post install scripts
+        working-directory: backend
+        run: composer run-script post-install-cmd
+
+      - name: Wait for Postgres service
+        working-directory: backend
+        run: |
+          for i in {1..30}; do
+            if (echo > /dev/tcp/127.0.0.1/5432) 2>/dev/null; then
+              echo "Postgres is available"; break
+            fi
+            echo "Waiting for Postgres to be ready..."; sleep 1
+          done
+
+      - name: Create test database & run migrations
+        working-directory: backend
+        run: |
+          php bin/console doctrine:database:create --if-not-exists --env=test
+          php bin/console doctrine:migrations:migrate --no-interaction --env=test
+
+      - name: Load fixtures for test environment
+        working-directory: backend
+        run: |
+          php bin/console doctrine:fixtures:load --no-interaction --purge-with-truncate --env=test
+
+      - name: Start Symfony server
+        working-directory: backend
+        run: |
+          # Ensure var dirs exist and are writable
+          sudo mkdir -p var/log var/cache && sudo chown -R $USER:$USER var
+          php -S 127.0.0.1:8000 -t public > /tmp/symfony_server.log 2>&1 &
+
+      - name: Wait for app to be available
+        working-directory: backend
+        run: |
+          for i in {1..30}; do
+            if curl -sSf http://127.0.0.1:8000/ > /dev/null; then
+              echo 'Server is up'; break
+            fi
+            echo 'Waiting for server...'; sleep 1
+          done
+
       - name: Install API test dependencies
         working-directory: tests-api
         run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Install psql client (debug)
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y postgresql-client
+
+      - name: List databases (debug)
+        working-directory: backend
+        run: |
+          export PGPASSWORD=${POSTGRES_PASSWORD}
+          psql -h 127.0.0.1 -U ${POSTGRES_USER} -d ${POSTGRES_DB} -c '\l' || true
+
+      - name: Probe app (debug)
+        working-directory: backend
+        run: |
+          echo '---- curl root ----';
+          curl -v http://127.0.0.1:8000/ || true;
+          echo '---- http status code ----';
+          curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8000/ || true;
 
       - name: Run API tests via Makefile (test-api)
         working-directory: .
