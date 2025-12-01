@@ -16,7 +16,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[Route('/api/admin', name: 'api_admin_')]
-final class AdminDashboardController extends AbstractController
+final class AdminDashBoardController extends AbstractController
 {
     public function __construct(
         private readonly QuestionnaireRepository $questionnaireRepository,
@@ -156,7 +156,7 @@ final class AdminDashboardController extends AbstractController
             ->getQuery()
             ->getResult();
 
-        //SI CA FOIRE, C'EST LA AUSSI.
+        //TODO: SI CA FOIRE, C'EST LA AUSSI.
         $handle = fopen('php://temp', 'r+');
 
         //La magie du copier coller de "fputcsv", pire nom.

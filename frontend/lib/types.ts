@@ -158,3 +158,37 @@ export type QuestionNodeProps = {
   onFileChange: (file: File | null) => void;
 };
 
+export type DashboardItem = {
+  id: number;
+  title: string;
+  description: string | null;
+  total_sessions: number;
+  finished_sessions: number;
+  completion_rate: number;
+};
+
+export type ChoiceStat = {
+  id: number;
+  content: string;
+  count: number;
+};
+
+export type QuestionStat = {
+  id: number;
+  title: string;
+  totalAnswers: number;
+  choices: ChoiceStat[];
+};
+
+export type QuestionnaireStats = {
+  questionnaire: {
+    id: number;
+    title: string;
+  };
+  questions: QuestionStat[];
+};
+
+export interface SideAction {
+    name: string;
+    url: string;
+}

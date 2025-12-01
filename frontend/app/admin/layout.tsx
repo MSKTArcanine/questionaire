@@ -1,4 +1,4 @@
-import Link from "next/link";
+import SideActions from "@/component/admin/SideActions";
 import type { ReactNode } from "react";
 
 export default function AdminLayout({ children }: { readonly children: ReactNode }) {
@@ -15,21 +15,9 @@ export default function AdminLayout({ children }: { readonly children: ReactNode
           <div className="border border-base-300 rounded-lg py-3 text-center font-semibold">
             Actions
           </div>
-
-          <Link
-            href="/admin/create"
-            className="btn btn-sm justify-start border-base-300 bg-base-100"
-          >
-            Outil de création
-          </Link>
-
-          <Link
-            href="/admin/search"
-            className="btn btn-sm justify-start border-base-300 bg-base-100"
-          >
-            Outil de recherche
-          </Link>
-
+          <SideActions name="Outil de création" url="/admin/create"/>
+          <SideActions name="Outil de recherche" url="/admin/search"/>
+          <SideActions name="Dashboard" url="/admin/dashboard"/>
           <button className="btn btn-sm mt-auto justify-start border-base-300 bg-base-100">
             Autre outil
           </button>
