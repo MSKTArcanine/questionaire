@@ -31,10 +31,9 @@ services:
     environment:
       NEXT_PUBLIC_API_URL: "https://questionaire.localhost/api"
       BACKEND_URL: http://backend:8000
+      NODE_ENV: production
     expose:
       - "3000"
-    volumes:
-      - ./frontend:/app
   
   caddy:
     hostname: questionaire.localhost

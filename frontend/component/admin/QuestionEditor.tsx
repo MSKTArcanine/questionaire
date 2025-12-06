@@ -24,7 +24,7 @@ export default function QuestionEditor(prop: Readonly<PropQuestionEditor>) {
       ...prop.question,
       title: trimTitle,
       description: trimDescription || undefined,
-      answerType,
+      type: answerType,
       media: hasMedia ? {
         ...(prop.question.media ?? {}),
         type: mediaType,

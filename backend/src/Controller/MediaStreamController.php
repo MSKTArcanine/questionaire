@@ -25,7 +25,7 @@ use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\Routing\Attribute\Route;
 use ValueError;
 
-#[Route('/api/questions', name: 'api_questions')]
+#[Route('/api/questions', name: 'api_questions_')]
 final class MediaStreamController extends AbstractController
 {
     public function __construct(
