@@ -7,7 +7,8 @@ install:
 	@echo "📋 Étape 1/6 : Vérification des prérequis..."
 	@command -v docker >/dev/null 2>&1 || { echo "❌ Docker n'est pas installé. Installez Docker Desktop : https://www.docker.com/"; exit 1; }
 	@command -v docker compose >/dev/null 2>&1 || { echo "❌ Docker Compose n'est pas installé."; exit 1; }
-	@echo "✅ Docker et Docker Compose sont installés"
+	@command -v composer >/dev/null 2>&1 || { echo "❌ Composer n'est pas installé. Installez Composer : https://getcomposer.org/"; exit 1; }
+	@echo "✅ Docker, Docker Compose et Composer sont installés"
 	@echo ""
 	@echo "📋 Étape 2/6 : Configuration des fichiers .env..."
 	@if [ ! -f .env ]; then \
@@ -33,11 +34,19 @@ install:
 	@echo ""
 	@echo "✅ Base de données prête"
 	@echo ""
-	@echo "📋 Étape 5/6 : Initialisation de la base de données (migrations + fixtures)..."
+	@echo "📋 Étape 5/8 : Installation des dépendances Composer (backend)..."
+	@docker compose exec backend composer install --no-interaction
+	@echo "✅ Dépendances backend installées"
+	@echo ""
+	@echo "📋 Étape 6/8 : Installation des dépendances Composer (tests-api)..."
+	@cd tests-api && composer install --no-interaction
+	@echo "✅ Dépendances tests-api installées"
+	@echo ""
+	@echo "📋 Étape 7/8 : Initialisation de la base de données (migrations + fixtures)..."
 	@$(MAKE) reset-db
 	@echo "✅ Base de données initialisée"
 	@echo ""
-	@echo "📋 Étape 6/6 : Génération des clés JWT..."
+	@echo "📋 Étape 8/8 : Génération des clés JWT..."
 	@docker compose exec backend php bin/console lexik:jwt:generate-keypair --overwrite
 	@echo "✅ Clés JWT générées"
 	@echo ""

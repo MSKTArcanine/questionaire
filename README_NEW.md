@@ -30,10 +30,17 @@ Avant de commencer, assurez-vous d'avoir installé sur votre machine :
   - Vérifiez avec : `docker --version` et `docker compose version`
 
 - **`make`** (utilitaire pour exécuter les commandes du Makefile)
+
   - Linux/macOS : déjà installé généralement
   - Windows : installer via [chocolatey](https://chocolatey.org/) ou WSL2
 
-> **Note importante** : Les dépendances PHP (Composer) et Node.js (pnpm) **ne sont pas nécessaires** sur votre machine locale car elles seront installées **à l'intérieur des conteneurs Docker**. C'est l'un des avantages de Docker : isoler l'environnement de développement.
+- **[Composer](https://getcomposer.org/)** (gestionnaire de dépendances PHP)
+  - Version minimale : Composer 2.0+
+  - Vérifiez avec : `composer --version`
+  - Installation : [getcomposer.org/download](https://getcomposer.org/download/)
+
+> **Pourquoi Composer est nécessaire ?**  
+> Bien que le backend Symfony s'exécute dans Docker, les **tests API** (`tests-api/`) s'exécutent sur votre machine hôte pour simuler un vrai client externe. Composer est donc requis pour installer PHPUnit et les dépendances de test.
 
 ---
 
@@ -51,14 +58,15 @@ make install
 
 La commande `make install` exécute automatiquement toutes les étapes :
 
-1. ✅ Vérification des prérequis (Docker, Docker Compose)
+1. ✅ Vérification des prérequis (Docker, Docker Compose, Composer)
 2. ✅ Création des fichiers `.env` (si absents)
 3. ✅ Construction et démarrage des conteneurs Docker
 4. ✅ Attente intelligente du démarrage de PostgreSQL (avec `pg_isready`)
-5. ✅ Initialisation de la base de données (migrations + fixtures)
-6. ✅ Génération des clés JWT
-7. ✅ Affichage du statut des conteneurs
-8. ✅ Vérification de la configuration du fichier hosts
+5. ✅ Installation des dépendances Composer (backend et tests-api)
+6. ✅ Initialisation de la base de données (migrations + fixtures)
+7. ✅ Génération des clés JWT
+8. ✅ Affichage du statut des conteneurs
+9. ✅ Vérification de la configuration du fichier hosts
 
 **Passez directement à la section [Accès à l'application](#-accès-à-lapplication).**
 
@@ -461,6 +469,21 @@ make test-api-one t=Api/QuestionnaireApiTest.php::testListQuestionnaires
 make test-front
 ```
 
+### Installation des dépendances
+
+```bash
+# Installer les dépendances Composer du backend (dans le conteneur)
+docker compose exec backend composer install
+
+# Installer les dépendances Composer des tests-api (sur l'hôte)
+cd tests-api && composer install
+
+# Installer les dépendances pnpm du frontend (dans le conteneur)
+docker compose exec frontend pnpm install
+```
+
+> **Note** : `make install` exécute déjà ces commandes automatiquement. Elles sont utiles si vous modifiez `composer.json` ou `package.json`.
+
 ---
 
 ## 🚨 Dépannage
@@ -577,6 +600,31 @@ ports:
    docker compose up -d
    make reset-db
    ```
+
+### Problème : Erreur "Dependencies are missing, try running composer install"
+
+**Symptôme** : Erreur lors de `make reset-db` ou `make test-api`
+
+**Solutions** :
+
+1. Installez les dépendances du backend :
+
+   ```bash
+   docker compose exec backend composer install
+   ```
+
+2. Installez les dépendances des tests :
+
+   ```bash
+   cd tests-api && composer install
+   ```
+
+3. Ou relancez l'installation complète :
+   ```bash
+   make reinstall
+   ```
+
+> **Note** : `make install` installe automatiquement ces dépendances. Cette erreur survient si vous avez sauté cette étape ou si les fichiers `vendor/` ont été supprimés.
 
 ### Problème : Les fixtures ne se chargent pas
 
