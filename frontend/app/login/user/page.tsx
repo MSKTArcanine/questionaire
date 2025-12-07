@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { FormEvent, Suspense, useState } from "react";
 
-export default function LoginPage() {
+function LoginForm() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const redirectTo = searchParams.get("redirect") ?? "/questionnaires";
@@ -143,5 +143,17 @@ export default function LoginPage() {
 
         </div>
         </div>
+    );
+}
+
+export default function LoginPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center bg-base-200">
+                <span className="loading loading-spinner loading-lg"></span>
+            </div>
+        }>
+            <LoginForm />
+        </Suspense>
     );
 }
